@@ -1,9 +1,9 @@
-name: Publish Python 🐍 distribution 📦 to PyPI
+name: Publish Python Package
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*.*.*'
 
   release:
     types: [published]
@@ -32,7 +32,7 @@ jobs:
 
   publish-to-pypi:
     name: >-
-      Publish Python 🐍 distribution 📦 to PyPI
+      Publish Python 🐍 distribution PyPI
     needs:
     - build
     runs-on: ubuntu-latest
@@ -43,17 +43,17 @@ jobs:
       id-token: write
 
     steps:
-    - name: Download all the dists
+    - name: Download the dists
       uses: actions/download-artifact@v3
       with:
         name: python-package-distributions
         path: dist/
-    - name: Publish distribution 📦 to PyPI
+    - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
     name: >-
-      Sign Python 🐍 distribution 📦 and create GitHub Release
+      Create GitHub Release
     needs:
     - publish-to-pypi
     runs-on: ubuntu-latest
@@ -63,12 +63,12 @@ jobs:
       id-token: write
 
     steps:
-    - name: Download all the dists
+    - name: Download dists
       uses: actions/download-artifact@v3
       with:
         name: python-package-distributions
         path: dist/
-    - name: Sign the dists with Sigstore
+    - name: Sign dists with Sigstore
       uses: sigstore/gh-action-sigstore-python@v2.1.1
       with:
         inputs: >-
@@ -78,9 +78,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: >-
-        LATEST_TAG=$(git describe --tags --abbrev=0)
         gh release create
-        "$LATEST_TAG"
+        '{{ github.event.release.tag_name }}'
         --repo '${{ github.repository }}'
         --notes ""
     - name: Upload artifact signatures to GitHub Release
@@ -91,5 +90,5 @@ jobs:
       # sigstore-produced signatures and certificates.
       run: >-
         gh release upload
-        "$LATEST_TAG" dist/**
+        '{{ github.event.release.tag_name }}' dist/**
         --repo '${{ github.repository }}'

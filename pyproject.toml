@@ -34,7 +34,7 @@ classifiers = [
 Homepage = "https://github.com/WecoAI/weco-python"
 
 [project.optional-dependencies]
-dev = ["build", "setuptools_scm", "flake8", "flake8-pyproject", "black", "isort"]
+dev = ["pytest", "build", "setuptools_scm", "flake8", "flake8-pyproject", "black", "isort"]
 
 [tool.setuptools]
 packages = ["weco"]

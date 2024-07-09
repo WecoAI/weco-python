@@ -17,13 +17,19 @@ class WecoAI:
         The API key used for authentication.
     """
 
-    def __init__(self, api_key: str = None, timeout: float = 30.0) -> None:
+    def __init__(self, api_key: str = None, timeout: float = 30.0, http2: bool = True) -> None:
         """Initializes the WecoAI client with the provided API key and base URL.
 
         Parameters
         ----------
         api_key : str, optional
             The API key used for authentication. If not provided, the client will attempt to read it from the environment variable - WECO_API_KEY.
+
+        timeout : float, optional
+            The timeout for the HTTP requests in seconds (default is 30.0).
+
+        http2 : bool, optional
+            Whether to use HTTP/2 protocol for the HTTP requests (default is True).
 
         Raises
         ------
@@ -41,8 +47,8 @@ class WecoAI:
         self.base_url = "https://function-builder.vercel.app"
 
         # Setup clients
-        self.client = httpx.Client(http2=True, timeout=timeout)
-        self.async_client = httpx.AsyncClient(http2=True, timeout=timeout)
+        self.client = httpx.Client(http2=http2, timeout=timeout)
+        self.async_client = httpx.AsyncClient(http2=http2, timeout=timeout)
 
     def __del__(self):
         """Closes the HTTP clients when the WecoAI instance is deleted."""

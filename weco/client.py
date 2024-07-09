@@ -4,7 +4,7 @@ import warnings
 from typing import Any, Callable, Coroutine, Dict, List, Tuple
 
 import httpx
-
+import base64
 
 class WecoAI:
     """A client for the WecoAI function builder API that allows users to build and query specialized functions built by LLMs.
@@ -41,8 +41,8 @@ class WecoAI:
         self.base_url = "https://function-builder.vercel.app"
 
         # Setup clients
-        self.client = httpx.Client(http2=False, timeout=timeout)
-        self.async_client = httpx.AsyncClient(http2=False, timeout=timeout)
+        self.client = httpx.Client(http2=True, timeout=timeout)
+        self.async_client = httpx.AsyncClient(http2=True, timeout=timeout)
 
     def __del__(self):
         """Closes the HTTP clients when the WecoAI instance is deleted."""

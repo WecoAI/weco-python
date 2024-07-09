@@ -1,10 +1,9 @@
 import asyncio
 import os
 import warnings
-from typing import Any, Callable, Coroutine, Dict, List, Tuple
-
+from typing import Any, Callable, Coroutine, Dict, List, Tuple, Optional
 import httpx
-import base64
+from .utils import extract_image_info
 
 class WecoAI:
     """A client for the WecoAI function builder API that allows users to build and query specialized functions built by LLMs.
@@ -200,25 +199,39 @@ class WecoAI:
         """
         return self._build(task_description=task_description, is_async=False)
 
-    def _query(self, fn_name: str, fn_input: str, is_async: bool) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
+    def _query(self, is_async: bool, fn_name: str, text_input: Optional[str] = "", images_input: Optional[List[str]] = []) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
         """Internal method to handle both synchronous and asynchronous query requests.
 
         Parameters
         ----------
-        fn_name : str
-            The name of the function to query.
-        fn_input : str
-            The input to the function.
         is_async : bool
             Whether to perform an asynchronous request.
+        fn_name : str
+            The name of the function to query.
+        text_input : str, optional
+            The text input to the function.
+        images_input : List[str], optional
+            A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
 
         Returns
         -------
         dict | Coroutine[Any, Any, dict]
             A dictionary containing the query results, or a coroutine that returns such a dictionary.
         """
+        # Validate the input
+        # Assert that either text or images or both must be provded
+        if text_input == "" and len(images_input) == 0: raise ValueError("Either text or images or both must be provided as input.")
+
+        # Assert that the images are either urls or base64 encoded images
+        for i, image in enumerate(images_input):
+            if extract_image_info(image) is not None: continue  # base64 encoded image
+            else:  # Potential URL
+                if image.startswith("http"): continue  # URL
+                else: raise ValueError(f"Image at index {i} must be a URL or a base64 encoded image.")
+                    
+
         endpoint = "query"
-        data = {"name": fn_name, "user_message": fn_input}
+        data = {"name": fn_name, "text": text_input, "image_urls": images_input}
         request = self._make_request(endpoint=endpoint, data=data, is_async=is_async)
 
         if is_async:
@@ -232,15 +245,17 @@ class WecoAI:
             response = request  # the request has already been made and the response is available
             return self._process_response(response=response)
 
-    async def aquery(self, fn_name: str, fn_input: str) -> Dict[str, Any]:
+    async def aquery(self, fn_name: str, text_input: Optional[str] = "", images_input: Optional[List[str]] = []) -> Dict[str, Any]:
         """Asynchronously queries a function with the given function ID and input.
 
         Parameters
         ----------
         fn_name : str
             The name of the function to query.
-        fn_input : str
-            The input to the function.
+        text_input : str, optional
+            The text input to the function.
+        images_input : List[str], optional
+            A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
 
         Returns
         -------
@@ -248,17 +263,19 @@ class WecoAI:
             A dictionary containing the output of the function, the number of input tokens, the number of output tokens,
             and the latency in milliseconds.
         """
-        return await self._query(fn_name=fn_name, fn_input=fn_input, is_async=True)
+        return await self._query(fn_name=fn_name, text_input=text_input, images_input=images_input, is_async=True)
 
-    def query(self, fn_name: str, fn_input: str) -> Dict[str, Any]:
+    def query(self, fn_name: str, text_input: Optional[str] = "", images_input: Optional[List[str]] = []) -> Dict[str, Any]:
         """Synchronously queries a function with the given function ID and input.
 
         Parameters
         ----------
         fn_name : str
             The name of the function to query.
-        fn_input : str
-            The input to the function.
+        text_input : str, optional
+            The text input to the function.
+        images_input : List[str], optional
+            A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
 
         Returns
         -------
@@ -266,9 +283,9 @@ class WecoAI:
                A dictionary containing the output of the function, the number of input tokens, the number of output tokens,
             and the latency in milliseconds.
         """
-        return self._query(fn_name=fn_name, fn_input=fn_input, is_async=False)
+        return self._query(fn_name=fn_name, text_input=text_input, images_input=images_input, is_async=False)
 
-    def batch_query(self, fn_names: str | List[str], batch_inputs: List[str]) -> List[Dict[str, Any]]:
+    def batch_query(self, fn_names: str | List[str], batch_inputs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Synchronously queries multiple functions using asynchronous calls internally.
 
         This method uses the asynchronous queries to submit all queries concurrently
@@ -281,9 +298,11 @@ class WecoAI:
             Note that if a single function name is provided, it will be used for all queries.
             If a list of function names is provided, the length must match the number of queries.
 
-        batch_inputs : List[str]
-            A list of inputs for the functions to query.
-            Note that the index of each input must correspond to the index of the function name.
+        batch_inputs : List[Dict[str, Any]]
+            A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g., 
+            when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]} 
+            and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
+            Note that the index of each input must correspond to the index of the function name when both inputs are lists
 
         Returns
         -------
@@ -291,13 +310,14 @@ class WecoAI:
             A list of dictionaries, each containing the output of a function query,
             in the same order as the input queries.
         """
-        if isinstance(fn_names, str):
-            fn_names = [fn_names] * len(batch_inputs)
-        elif len(fn_names) != len(batch_inputs):
-            raise ValueError("The number of function names must match the number of inputs.")
+        if isinstance(fn_names, str): fn_names = [fn_names] * len(batch_inputs)
+        elif len(fn_names) != len(batch_inputs): raise ValueError("The number of function names must match the number of inputs.")
 
         async def run_queries():
-            tasks = [self.aquery(fn_name=fn_name, fn_input=fn_input) for fn_name, fn_input in zip(fn_names, batch_inputs)]
+            tasks = [
+                self.aquery(fn_name=fn_name, **fn_input)  # unpack the input kwargs
+                for fn_name, fn_input in zip(fn_names, batch_inputs)
+            ]
             return await asyncio.gather(*tasks)
 
         return asyncio.run(run_queries())

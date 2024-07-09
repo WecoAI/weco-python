@@ -1,9 +1,12 @@
 import asyncio
 import os
 import warnings
-from typing import Any, Callable, Coroutine, Dict, List, Tuple, Optional
+from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple
+
 import httpx
+
 from .utils import extract_image_info
+
 
 class WecoAI:
     """A client for the WecoAI function builder API that allows users to build and query specialized functions built by LLMs.
@@ -198,7 +201,9 @@ class WecoAI:
         """
         return self._build(task_description=task_description, is_async=False)
 
-    def _query(self, is_async: bool, fn_name: str, text_input: Optional[str], images_input: Optional[List[str]]) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
+    def _query(
+        self, is_async: bool, fn_name: str, text_input: Optional[str], images_input: Optional[List[str]]
+    ) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
         """Internal method to handle both synchronous and asynchronous query requests.
 
         Parameters
@@ -219,15 +224,18 @@ class WecoAI:
         """
         # Validate the input
         # Assert that either text or images or both must be provded
-        if text_input == "" and len(images_input) == 0: raise ValueError("Either text or images or both must be provided as input.")
+        if text_input == "" and len(images_input) == 0:
+            raise ValueError("Either text or images or both must be provided as input.")
 
         # Assert that the images are either urls or base64 encoded images
         for i, image in enumerate(images_input):
-            if extract_image_info(image) is not None: continue  # base64 encoded image
+            if extract_image_info(image) is not None:
+                continue  # base64 encoded image
             else:  # Potential URL
-                if image.startswith("http"): continue  # URL
-                else: raise ValueError(f"Image at index {i} must be a URL or a base64 encoded image.")
-                    
+                if image.startswith("http"):
+                    continue  # URL
+                else:
+                    raise ValueError(f"Image at index {i} must be a URL or a base64 encoded image.")
 
         endpoint = "query"
         data = {"name": fn_name, "text": text_input, "image_urls": images_input}
@@ -244,7 +252,9 @@ class WecoAI:
             response = request  # the request has already been made and the response is available
             return self._process_response(response=response)
 
-    async def aquery(self, fn_name: str, text_input: Optional[str] = "", images_input: Optional[List[str]] = []) -> Dict[str, Any]:
+    async def aquery(
+        self, fn_name: str, text_input: Optional[str] = "", images_input: Optional[List[str]] = []
+    ) -> Dict[str, Any]:
         """Asynchronously queries a function with the given function ID and input.
 
         Parameters
@@ -298,8 +308,8 @@ class WecoAI:
             If a list of function names is provided, the length must match the number of queries.
 
         batch_inputs : List[Dict[str, Any]]
-            A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g., 
-            when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]} 
+            A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g.,
+            when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]}
             and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
             Note that the index of each input must correspond to the index of the function name when both inputs are lists.
 
@@ -309,8 +319,10 @@ class WecoAI:
             A list of dictionaries, each containing the output of a function query,
             in the same order as the input queries.
         """
-        if isinstance(fn_names, str): fn_names = [fn_names] * len(batch_inputs)
-        elif len(fn_names) != len(batch_inputs): raise ValueError("The number of function names must match the number of inputs.")
+        if isinstance(fn_names, str):
+            fn_names = [fn_names] * len(batch_inputs)
+        elif len(fn_names) != len(batch_inputs):
+            raise ValueError("The number of function names must match the number of inputs.")
 
         async def run_queries():
             tasks = [

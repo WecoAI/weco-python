@@ -79,7 +79,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       run: >-
         gh release create
-        '{{ github.event.release.tag_name }}'
+        '${{ github.event.release.tag_name }}'
         --repo '${{ github.repository }}'
         --notes ""
     - name: Upload artifact signatures to GitHub Release
@@ -90,5 +90,5 @@ jobs:
       # sigstore-produced signatures and certificates.
       run: >-
         gh release upload
-        '{{ github.event.release.tag_name }}' dist/**
+        '${{ github.event.release.tag_name }}' dist/**
         --repo '${{ github.repository }}'

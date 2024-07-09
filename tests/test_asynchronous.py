@@ -12,13 +12,13 @@ async def ml_task_evaluator():
 
 @pytest.mark.asyncio
 async def test_abuild(ml_task_evaluator):
-    fn_name, fn_desc = ml_task_evaluator
+    fn_name, fn_desc = await ml_task_evaluator
     assert isinstance(fn_name, str)
     assert isinstance(fn_desc, str)
 
 @pytest.mark.asyncio
 async def test_aquery(ml_task_evaluator):
-    fn_name, _ = ml_task_evaluator
+    fn_name, _ = await ml_task_evaluator
     query_response = await aquery(
         fn_name=fn_name,
         fn_input="I want to train a model to predict house prices using the Boston Housing dataset hosted on Kaggle.",

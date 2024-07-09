@@ -199,7 +199,7 @@ class WecoAI:
         """
         return self._build(task_description=task_description, is_async=False)
 
-    def _query(self, is_async: bool, fn_name: str, text_input: Optional[str] = "", images_input: Optional[List[str]] = []) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
+    def _query(self, is_async: bool, fn_name: str, text_input: Optional[str], images_input: Optional[List[str]]) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
         """Internal method to handle both synchronous and asynchronous query requests.
 
         Parameters
@@ -302,7 +302,7 @@ class WecoAI:
             A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g., 
             when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]} 
             and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
-            Note that the index of each input must correspond to the index of the function name when both inputs are lists
+            Note that the index of each input must correspond to the index of the function name when both inputs are lists.
 
         Returns
         -------

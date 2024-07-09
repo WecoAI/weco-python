@@ -43,8 +43,7 @@ class WecoAI:
                 raise ValueError("WECO_API_KEY must be passed to client or set as an environment variable")
         self.api_key = api_key
 
-        self.base_url = "https://function-builder.vercel.app"
-
+        self.base_url = "https://function.api.weco.ai"
         # Setup clients
         self.client = httpx.Client(http2=http2, timeout=timeout)
         self.async_client = httpx.AsyncClient(http2=http2, timeout=timeout)

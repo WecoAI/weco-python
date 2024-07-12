@@ -9,7 +9,7 @@ from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple
 
 import httpx
 
-from .constants import MAX_TEXT_LENGTH, MAX_IMAGE_UPLOADS, MAX_IMAGE_SIZE_MB, ALLOWED_IMAGE_EXTENSIONS
+from .constants import MAX_TEXT_LENGTH, MAX_IMAGE_UPLOADS, MAX_IMAGE_SIZE_MB, SUPPORTED_IMAGE_EXTENSIONS
 from .utils import is_public_url_image, is_base64_image, is_local_image, get_image_size, preprocess_image
 
 
@@ -273,34 +273,22 @@ class WecoAI:
         # Return the URL of the uploaded image
         return presigned_url
 
-
-    def _query(
-        self, is_async: bool, fn_name: str, text_input: Optional[str], images_input: Optional[List[str]]
-    ) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
-        """Internal method to handle both synchronous and asynchronous query requests.
+    def _validate_query(self, text_input: str, images_input: List[str]) -> None:
+        """
+        Validate the input for the query method.
 
         Parameters
         ----------
-        is_async : bool
-            Whether to perform an asynchronous request.
-        fn_name : str
-            The name of the function to query.
-        text_input : str, optional
+        text_input : str
             The text input to the function.
-        images_input : List[str], optional
+        images_input : List[str]
             A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
-
-        Returns
-        -------
-        dict | Coroutine[Any, Any, dict]
-            A dictionary containing the query results, or a coroutine that returns such a dictionary.
 
         Raises
         ------
         ValueError
             If the input is invalid.
         """
-        # Validate the input
         # Assert that either text or images or both must be provded
         if len(text_input) == 0 and len(images_input) == 0:
             raise ValueError("Either text or images or both must be provided as input.")
@@ -329,15 +317,43 @@ class WecoAI:
             
             # Check if the image type is supported
             file_type = file_type.lower()
-            if file_type not in ALLOWED_IMAGE_EXTENSIONS:
-                raise ValueError(f"Image file type {file_type} is not supported. Supported types are {ALLOWED_IMAGE_EXTENSIONS}.")
+            if file_type not in SUPPORTED_IMAGE_EXTENSIONS:
+                raise ValueError(f"Image file type {file_type} is not supported. Supported types are {SUPPORTED_IMAGE_EXTENSIONS}.")
             
             # Check if the image size is within the limit
             if get_image_size(image) > MAX_IMAGE_SIZE_MB:
                 raise ValueError(f"Individual image sizes must be less than {MAX_IMAGE_SIZE_MB} MB each.")
+            
+    def _query(
+        self, is_async: bool, fn_name: str, text_input: Optional[str], images_input: Optional[List[str]]
+    ) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
+        """Internal method to handle both synchronous and asynchronous query requests.
+
+        Parameters
+        ----------
+        is_async : bool
+            Whether to perform an asynchronous request.
+        fn_name : str
+            The name of the function to query.
+        text_input : str, optional
+            The text input to the function.
+        images_input : List[str], optional
+            A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
+
+        Returns
+        -------
+        dict | Coroutine[Any, Any, dict]
+            A dictionary containing the query results, or a coroutine that returns such a dictionary.
+
+        Raises
+        ------
+        ValueError
+            If the input is invalid.
+        """
+        # Validate the input
+        self._validate_query(text_input=text_input, images_input=images_input)
         
-        # Create links for all images that are not public URLs
-        # and upload images
+        # Create links for all images that are not public URLs and upload images
         for i, image in enumerate(images_input):
             if is_public_url_image(image):
                 continue
@@ -432,6 +448,12 @@ class WecoAI:
         List[Dict[str, Any]]
             A list of dictionaries, each containing the output of a function query,
             in the same order as the input queries.
+
+
+        Raises
+        ------
+        ValueError
+            If the number of function names (when provided as a list) does not match the number of inputs.
         """
         if isinstance(fn_names, str):
             fn_names = [fn_names] * len(batch_inputs)

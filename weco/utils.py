@@ -87,28 +87,36 @@ def is_public_url_image(maybe_url_image: str) -> bool:
     return True
 
 
-def get_image_size(image: str) -> float:
+def get_image_size(image: str, source: str) -> float:
     """
     Get the size of the image in MB.
 
-    Args:
-        image (str): URL, local path, or base64 encoding of the image
+    Parameters
+    ----------
+    image : str
+        The image data or URL.
 
-    Returns:
-        float: Size of the image in MB.
+    source : str
+        The source of the image. It can be 'base64', 'url', or 'local'.
 
-    Raises:
-        ValueError: If the image is not a valid input.
+    Returns
+    -------
+    float
+        The size of the image in MB.
+
+    Raises
+    ------
+    ValueError
+        If the image is not a valid image.
     """
-    is_base64, image_info = is_base64_image(maybe_base64=image)
-
-    if is_base64:
-        img_data = base64.b64decode(image_info['encoding'])
-    elif is_public_url_image(maybe_url_image=image):
+    if source == 'base64':
+        _, base64_info = is_base64_image(maybe_base64=image)
+        img_data = base64.b64decode(base64_info['encoding'])
+    elif source == 'url':
         response = requests.get(image)
         response.raise_for_status()
         img_data = response.content
-    elif is_local_image(maybe_local_image=image):
+    elif source == 'local':
         with open(image, 'rb') as f:
             img_data = f.read()
     else:

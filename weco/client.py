@@ -233,8 +233,8 @@ class WecoAI:
         """
 
         if image_info["source"] == "base64":
-            _, image_info = is_base64_image(maybe_base64=image_info["image"])
-            img_data = base64.b64decode(image_info['encoding'])
+            _, base64_info = is_base64_image(maybe_base64=image_info["image"])
+            img_data = base64.b64decode(base64_info['encoding'])
         elif image_info["source"] == "url":
             response = requests.get(image_info["image"])
             response.raise_for_status()
@@ -283,6 +283,7 @@ class WecoAI:
         -------
         List[Dict[str, Any]]
             A list of dictionaries containing the image metadata.
+
         Raises
         ------
         ValueError
@@ -303,10 +304,10 @@ class WecoAI:
         # Check if input is an valid image
         image_info = []
         for image in images_input:
-            is_base64, image_info = is_base64_image(maybe_base64=image)
+            is_base64, base64_info = is_base64_image(maybe_base64=image)
             if is_base64:
                 try:
-                    file_type = image_info['media_type'].split('/')[1]
+                    file_type = base64_info['media_type'].split('/')[1]
                 except Exception as _:
                     raise ValueError("Invalid image base64 encoding. Try providing a valid image URL, local path or base64 encoded string.")
 
@@ -325,17 +326,7 @@ class WecoAI:
             
             if not (is_base64 or is_public_url or is_local):
                 raise ValueError("Images must be local paths, public URLs or base64 encoded strings.")
-            
-            # Check if the image type is supported
-            file_type = file_type.lower()
-            if file_type not in SUPPORTED_IMAGE_EXTENSIONS:
-                raise ValueError(f"Image file type {file_type} is not supported. Supported types are {SUPPORTED_IMAGE_EXTENSIONS}.")
 
-            # Check if the image size is within the limit
-            size = get_image_size(image)
-            if size > MAX_IMAGE_SIZE_MB:
-                raise ValueError(f"Individual image sizes must be less than {MAX_IMAGE_SIZE_MB} MB each.")
-            
             # Determine the source of image
             if is_base64:
                 source = "base64"
@@ -343,12 +334,21 @@ class WecoAI:
                 source = "url"
             elif is_local:
                 source = "local"
+ 
+            # Check if the image type is supported
+            file_type = file_type.lower()
+            if file_type not in SUPPORTED_IMAGE_EXTENSIONS:
+                raise ValueError(f"Image file type {file_type} is not supported. Supported types are {SUPPORTED_IMAGE_EXTENSIONS}.")
 
+            # Check if the image size is within the limit
+            size = get_image_size(image=image, source=source)
+            if size > MAX_IMAGE_SIZE_MB:
+                raise ValueError(f"Individual image sizes must be less than {MAX_IMAGE_SIZE_MB} MB each.")
+            
             image_info.append({"image": image, "file_type": file_type, "size": size, "source": source})
         
         return image_info
             
-
     def _query(
         self, is_async: bool, fn_name: str, text_input: Optional[str], images_input: Optional[List[str]]
     ) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:

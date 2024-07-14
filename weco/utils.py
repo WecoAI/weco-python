@@ -1,10 +1,11 @@
+import base64
 import os
 import re
-import requests
-from urllib.parse import urlparse
-from typing import Dict, Optional, Tuple
 from io import BytesIO
-import base64
+from typing import Dict, Optional, Tuple
+from urllib.parse import urlparse
+
+import requests
 from PIL import Image
 
 
@@ -24,7 +25,7 @@ def is_local_image(maybe_local_image: str) -> bool:
     """
     if not os.path.exists(maybe_local_image):  # Check if the file exists
         return False
-    
+
     try:  # Check if the file is an image
         Image.open(maybe_local_image)
     except IOError:
@@ -78,10 +79,10 @@ def is_public_url_image(maybe_url_image: str) -> bool:
         return False
 
     # Check if the URL is an image
-    content_type = response.headers.get('content-type')
+    content_type = response.headers.get("content-type")
     if not content_type:
         return False
-    if not content_type.startswith('image'):
+    if not content_type.startswith("image"):
         return False
 
     return True
@@ -109,15 +110,15 @@ def get_image_size(image: str, source: str) -> float:
     ValueError
         If the image is not a valid image.
     """
-    if source == 'base64':
+    if source == "base64":
         _, base64_info = is_base64_image(maybe_base64=image)
-        img_data = base64.b64decode(base64_info['encoding'])
-    elif source == 'url':
+        img_data = base64.b64decode(base64_info["encoding"])
+    elif source == "url":
         response = requests.get(image)
         response.raise_for_status()
         img_data = response.content
-    elif source == 'local':
-        with open(image, 'rb') as f:
+    elif source == "local":
+        with open(image, "rb") as f:
             img_data = f.read()
     else:
         raise ValueError("Invalid image input")
@@ -144,6 +145,6 @@ def preprocess_image(image: Image) -> Image:
     """
     # Do not rescale or resize. Only do this if latency becomes an issue.
     # Remove the alpha channel for PNG and WEBP images if it exists.
-    if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
-        image = image.convert('RGB')
+    if image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info):
+        image = image.convert("RGB")
     return image

@@ -1,16 +1,16 @@
 import asyncio
-import requests
-import os
 import base64
-from io import BytesIO
-from PIL import Image
+import os
 import warnings
+from io import BytesIO
 from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple
 
 import httpx
+import requests
+from PIL import Image
 
-from .constants import MAX_TEXT_LENGTH, MAX_IMAGE_UPLOADS, MAX_IMAGE_SIZE_MB, SUPPORTED_IMAGE_EXTENSIONS
-from .utils import is_public_url_image, is_base64_image, is_local_image, get_image_size, preprocess_image
+from .constants import MAX_IMAGE_SIZE_MB, MAX_IMAGE_UPLOADS, MAX_TEXT_LENGTH, SUPPORTED_IMAGE_EXTENSIONS
+from .utils import get_image_size, is_base64_image, is_local_image, is_public_url_image, preprocess_image
 
 
 class WecoAI:
@@ -234,17 +234,17 @@ class WecoAI:
 
         if image_info["source"] == "base64":
             _, base64_info = is_base64_image(maybe_base64=image_info["image"])
-            img_data = base64.b64decode(base64_info['encoding'])
+            img_data = base64.b64decode(base64_info["encoding"])
         elif image_info["source"] == "url":
             response = requests.get(image_info["image"])
             response.raise_for_status()
             img_data = response.content
         elif image_info["source"] == "local":
-            with open(image_info["image"], 'rb') as f:
+            with open(image_info["image"], "rb") as f:
                 img_data = f.read()
         else:
             raise ValueError("Invalid image input")
-        
+
         # Preprocess the image
         img = Image.open(BytesIO(img_data))
         file_type = image_info["file_type"]
@@ -278,7 +278,7 @@ class WecoAI:
             The text input to the function.
         images_input : List[str]
             A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
-        
+
         Returns
         -------
         List[Dict[str, Any]]
@@ -292,38 +292,42 @@ class WecoAI:
         # Assert that either text or images or both must be provded
         if len(text_input) == 0 and len(images_input) == 0:
             raise ValueError("Either text or images or both must be provided as input.")
-        
+
         # Check if the text input is within the limit
         if len(text_input) > MAX_TEXT_LENGTH:
             raise ValueError(f"Text input must be less than {MAX_TEXT_LENGTH} characters.")
-        
+
         # Check if the images input is within the limit
         if len(images_input) > MAX_IMAGE_UPLOADS:
             raise ValueError(f"Number of images must be less than {MAX_IMAGE_UPLOADS}.")
-        
+
         # Check if input is an valid image
         image_info = []
         for image in images_input:
             is_base64, base64_info = is_base64_image(maybe_base64=image)
             if is_base64:
                 try:
-                    file_type = base64_info['media_type'].split('/')[1]
+                    file_type = base64_info["media_type"].split("/")[1]
                 except Exception as _:
-                    raise ValueError("Invalid image base64 encoding. Try providing a valid image URL, local path or base64 encoded string.")
+                    raise ValueError(
+                        "Invalid image base64 encoding. Try providing a valid image URL, local path or base64 encoded string."
+                    )
 
             is_public_url = is_public_url_image(maybe_url_image=image)
             if is_public_url:
                 response = requests.get(image)
                 response.raise_for_status()
                 try:
-                    file_type = response.headers['content-type'].split('/')[1]
+                    file_type = response.headers["content-type"].split("/")[1]
                 except Exception as _:
-                    raise ValueError("Invalid image URL. Try providing a valid image URL, local path or base64 encoded string.")
-            
+                    raise ValueError(
+                        "Invalid image URL. Try providing a valid image URL, local path or base64 encoded string."
+                    )
+
             is_local = is_local_image(maybe_local_image=image)
             if is_local:
                 file_type = os.path.splitext(image)[1][1:]
-            
+
             if not (is_base64 or is_public_url or is_local):
                 raise ValueError("Images must be local paths, public URLs or base64 encoded strings.")
 
@@ -334,21 +338,23 @@ class WecoAI:
                 source = "url"
             elif is_local:
                 source = "local"
- 
+
             # Check if the image type is supported
             file_type = file_type.lower()
             if file_type not in SUPPORTED_IMAGE_EXTENSIONS:
-                raise ValueError(f"Image file type {file_type} is not supported. Supported types are {SUPPORTED_IMAGE_EXTENSIONS}.")
+                raise ValueError(
+                    f"Image file type {file_type} is not supported. Supported types are {SUPPORTED_IMAGE_EXTENSIONS}."
+                )
 
             # Check if the image size is within the limit
             size = get_image_size(image=image, source=source)
             if size > MAX_IMAGE_SIZE_MB:
                 raise ValueError(f"Individual image sizes must be less than {MAX_IMAGE_SIZE_MB} MB each.")
-            
+
             image_info.append({"image": image, "file_type": file_type, "size": size, "source": source})
-        
+
         return image_info
-            
+
     def _query(
         self, is_async: bool, fn_name: str, text_input: Optional[str], images_input: Optional[List[str]]
     ) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
@@ -377,7 +383,7 @@ class WecoAI:
         """
         # Validate the input
         image_info = self._validate_query(text_input=text_input, images_input=images_input)
-        
+
         # Create links for all images that are not public URLs and upload images
         image_urls = []
         for i, info in enumerate(image_info):
@@ -388,7 +394,7 @@ class WecoAI:
             else:
                 raise ValueError(f"Image at index {i} must be a public URL or a path to a local image file.")
             image_urls.append(url)
-        
+
         # Make the request
         endpoint = "query"
         data = {"name": fn_name, "text": text_input, "images": image_urls}

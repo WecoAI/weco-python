@@ -217,63 +217,58 @@ class WecoAI:
         """
         return self._build(task_description=task_description, is_async=False)
 
-    def upload_image(self, image: str) -> str:
+    def _upload_image(self, image_info: Dict[str, Any]) -> str:
         """
         Uploads an image to an S3 bucket and returns the URL of the uploaded image.
 
         Parameters
         ----------
-        image : str
-            The path, base64 encoding, or URL of the image file to upload.
+        image_info : Dict[str, Any]
+            A dictionary containing the image metadata.
 
         Returns
         -------
         str
             The URL of the uploaded image.
         """
-        is_base64, image_info = is_base64_image(maybe_base64=image)
 
-        if is_base64:
+        if image_info["source"] == "base64":
+            _, image_info = is_base64_image(maybe_base64=image_info["image"])
             img_data = base64.b64decode(image_info['encoding'])
-            file_type = image_info['media_type'].split('/')[1]
-        elif is_public_url_image(maybe_url_image=image):
-            response = requests.get(image)
+        elif image_info["source"] == "url":
+            response = requests.get(image_info["image"])
             response.raise_for_status()
             img_data = response.content
-            file_type = response.headers['content-type'].split('/')[1]
-        elif is_local_image(maybe_local_image=image):
-            with open(image, 'rb') as f:
+        elif image_info["source"] == "local":
+            with open(image_info["image"], 'rb') as f:
                 img_data = f.read()
-            file_type = os.path.splitext(image)[1][1:]
         else:
             raise ValueError("Invalid image input")
         
         # Preprocess the image
         img = Image.open(BytesIO(img_data))
-        file_type = file_type.lower()
+        file_type = image_info["file_type"]
         processed_img = preprocess_image(image=img)
+        upload_data = BytesIO()
+        processed_img.save(upload_data, format=file_type)
+        upload_data = upload_data.getvalue()
 
         # Request a presigned URL from the server
         endpoint = "upload_link"
-        data = {"file_type": file_type}
+        request_data = {"file_type": file_type}
         # This needs to be a synchronous request since we need the presigned URL to upload the image
-        response = self._make_request(endpoint=endpoint, data=data, is_async=False)
-        presigned_url = response["url"]
+        response = self._make_request(endpoint=endpoint, data=request_data, is_async=False)
+        upload_link = response["url"]
 
         # Upload the image to the S3 bucket
-        data = BytesIO()
-        processed_img.save(data, format=file_type)
-        data = data.getvalue()
-        headers = {
-            "Content-Type": f"image/{file_type}"
-        }
-        response = requests.put(presigned_url, data=data, headers=headers)
+        headers = {"Content-Type": f"image/{file_type}"}
+        response = requests.put(upload_link, data=upload_data, headers=headers)
         response.raise_for_status()
 
         # Return the URL of the uploaded image
-        return presigned_url
+        return upload_link
 
-    def _validate_query(self, text_input: str, images_input: List[str]) -> None:
+    def _validate_query(self, text_input: str, images_input: List[str]) -> List[Dict[str, Any]]:
         """
         Validate the input for the query method.
 
@@ -283,7 +278,11 @@ class WecoAI:
             The text input to the function.
         images_input : List[str]
             A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
-
+        
+        Returns
+        -------
+        List[Dict[str, Any]]
+            A list of dictionaries containing the image metadata.
         Raises
         ------
         ValueError
@@ -302,28 +301,54 @@ class WecoAI:
             raise ValueError(f"Number of images must be less than {MAX_IMAGE_UPLOADS}.")
         
         # Check if input is an valid image
+        image_info = []
         for image in images_input:
             is_base64, image_info = is_base64_image(maybe_base64=image)
             if is_base64:
-                file_type = image_info['media_type'].split('/')[1]
-            elif is_public_url_image(maybe_url_image=image):
+                try:
+                    file_type = image_info['media_type'].split('/')[1]
+                except Exception as _:
+                    raise ValueError("Invalid image base64 encoding. Try providing a valid image URL, local path or base64 encoded string.")
+
+            is_public_url = is_public_url_image(maybe_url_image=image)
+            if is_public_url:
                 response = requests.get(image)
                 response.raise_for_status()
-                file_type = response.headers['content-type'].split('/')[1]
-            elif is_local_image(maybe_local_image=image):
+                try:
+                    file_type = response.headers['content-type'].split('/')[1]
+                except Exception as _:
+                    raise ValueError("Invalid image URL. Try providing a valid image URL, local path or base64 encoded string.")
+            
+            is_local = is_local_image(maybe_local_image=image)
+            if is_local:
                 file_type = os.path.splitext(image)[1][1:]
-            else:
+            
+            if not (is_base64 or is_public_url or is_local):
                 raise ValueError("Images must be local paths, public URLs or base64 encoded strings.")
             
             # Check if the image type is supported
             file_type = file_type.lower()
             if file_type not in SUPPORTED_IMAGE_EXTENSIONS:
                 raise ValueError(f"Image file type {file_type} is not supported. Supported types are {SUPPORTED_IMAGE_EXTENSIONS}.")
-            
+
             # Check if the image size is within the limit
-            if get_image_size(image) > MAX_IMAGE_SIZE_MB:
+            size = get_image_size(image)
+            if size > MAX_IMAGE_SIZE_MB:
                 raise ValueError(f"Individual image sizes must be less than {MAX_IMAGE_SIZE_MB} MB each.")
             
+            # Determine the source of image
+            if is_base64:
+                source = "base64"
+            elif is_public_url:
+                source = "url"
+            elif is_local:
+                source = "local"
+
+            image_info.append({"image": image, "file_type": file_type, "size": size, "source": source})
+        
+        return image_info
+            
+
     def _query(
         self, is_async: bool, fn_name: str, text_input: Optional[str], images_input: Optional[List[str]]
     ) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
@@ -351,24 +376,22 @@ class WecoAI:
             If the input is invalid.
         """
         # Validate the input
-        self._validate_query(text_input=text_input, images_input=images_input)
+        image_info = self._validate_query(text_input=text_input, images_input=images_input)
         
         # Create links for all images that are not public URLs and upload images
-        for i, image in enumerate(images_input):
-            if is_public_url_image(image):
-                continue
-            elif is_base64_image(image)[0]:
-                image_url = self.upload_image(image)
-                images_input[i] = image_url
-            elif is_local_image(image):
-                image_url = self.upload_image(image)
-                images_input[i] = image_url
+        image_urls = []
+        for i, info in enumerate(image_info):
+            if info["source"] == "url":
+                url = info["image"]
+            elif info["source"] == "base64" or info["source"] == "local":
+                url = self._upload_image(info)
             else:
                 raise ValueError(f"Image at index {i} must be a public URL or a path to a local image file.")
+            image_urls.append(url)
         
         # Make the request
         endpoint = "query"
-        data = {"name": fn_name, "text": text_input, "images": images_input}
+        data = {"name": fn_name, "text": text_input, "images": image_urls}
         request = self._make_request(endpoint=endpoint, data=data, is_async=is_async)
 
         if is_async:

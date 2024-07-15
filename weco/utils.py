@@ -154,7 +154,7 @@ def preprocess_image(image: Image, file_type: str) -> Tuple:
     # Remove the alpha channel for PNG and WEBP images if it exists.
     if image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info):
         image = image.convert("RGB")
-    
+
     # If the image file type is JPG, convert to JPEG for PIL compatibility.
     if file_type == "jpg":
         file_type = "jpeg"

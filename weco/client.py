@@ -330,7 +330,7 @@ class WecoAI:
                     raise ValueError(
                         "Invalid image URL. Try providing a valid image URL, local path or base64 encoded string."
                     )
-            
+
             is_local = is_local_image(maybe_local_image=image)
             if is_local:
                 file_type = os.path.splitext(image)[1][1:]

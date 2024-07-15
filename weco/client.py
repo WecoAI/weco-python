@@ -248,11 +248,12 @@ class WecoAI:
         # Preprocess the image
         img = Image.open(BytesIO(img_data))
         file_type = image_info["file_type"]
-        processed_img = preprocess_image(image=img)
+        processed_img, file_type = preprocess_image(image=img, file_type=file_type)
         upload_data = BytesIO()
         processed_img.save(upload_data, format=file_type)
         upload_data = upload_data.getvalue()
 
+        # TODO: Test the next lines till the end of the function
         # Request a presigned URL from the server
         endpoint = "upload_link"
         request_data = {"file_type": file_type}
@@ -289,6 +290,12 @@ class WecoAI:
         ValueError
             If the input is invalid.
         """
+        if not isinstance(text_input, str) or not isinstance(images_input, list):
+            raise ValueError("Text input must be a string and images input must be a list of strings.")
+        for image in images_input:
+            if not isinstance(image, str):
+                raise ValueError("Images input must be a list of strings.")
+
         # Assert that either text or images or both must be provded
         if len(text_input) == 0 and len(images_input) == 0:
             raise ValueError("Either text or images or both must be provided as input.")
@@ -323,7 +330,7 @@ class WecoAI:
                     raise ValueError(
                         "Invalid image URL. Try providing a valid image URL, local path or base64 encoded string."
                     )
-
+            
             is_local = is_local_image(maybe_local_image=image)
             if is_local:
                 file_type = os.path.splitext(image)[1][1:]

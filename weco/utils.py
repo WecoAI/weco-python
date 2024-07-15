@@ -69,20 +69,23 @@ def is_public_url_image(maybe_url_image: str) -> bool:
     bool
         True if the URL is publicly accessible, False otherwise.
     """
-    # Check if it is a valid URL
-    if not urlparse(maybe_url_image).scheme:
-        return False
+    try:
+        # Check if it is a valid URL
+        if not urlparse(maybe_url_image).scheme:
+            return False
 
-    # Check if the URL is publicly accessible
-    response = requests.head(maybe_url_image)
-    if response.status_code != 200:
-        return False
+        # Check if the URL is publicly accessible
+        response = requests.head(maybe_url_image)
+        if response.status_code != 200:
+            return False
 
-    # Check if the URL is an image
-    content_type = response.headers.get("content-type")
-    if not content_type:
-        return False
-    if not content_type.startswith("image"):
+        # Check if the URL is an image
+        content_type = response.headers.get("content-type")
+        if not content_type:
+            return False
+        if not content_type.startswith("image"):
+            return False
+    except Exception:
         return False
 
     return True
@@ -129,7 +132,7 @@ def get_image_size(image: str, source: str) -> float:
     return img_byte_arr.tell() / 1000000  # MB
 
 
-def preprocess_image(image: Image) -> Image:
+def preprocess_image(image: Image, file_type: str) -> Tuple:
     """
     Preprocess the image by converting it to RGB if it has an alpha channel.
 
@@ -137,14 +140,22 @@ def preprocess_image(image: Image) -> Image:
     ----------
     image : Image
         The image to preprocess.
+    file_type : str
+        The file type of the image.
 
     Returns
     -------
     Image
-        The preprocessed image
+        The preprocessed image.
+    file_type : str
+        The file type of the image.
     """
     # Do not rescale or resize. Only do this if latency becomes an issue.
     # Remove the alpha channel for PNG and WEBP images if it exists.
     if image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info):
         image = image.convert("RGB")
-    return image
+    
+    # If the image file type is JPG, convert to JPEG for PIL compatibility.
+    if file_type == "jpg":
+        file_type = "jpeg"
+    return image, file_type

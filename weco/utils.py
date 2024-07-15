@@ -1,8 +1,8 @@
-import random
-import string
 import base64
 import os
+import random
 import re
+import string
 from io import BytesIO
 from typing import Dict, Optional, Tuple
 from urllib.parse import urlparse

@@ -10,7 +10,14 @@ import requests
 from PIL import Image
 
 from .constants import MAX_IMAGE_SIZE_MB, MAX_IMAGE_UPLOADS, MAX_TEXT_LENGTH, SUPPORTED_IMAGE_EXTENSIONS
-from .utils import get_image_size, is_base64_image, is_local_image, is_public_url_image, preprocess_image, generate_random_base16_code
+from .utils import (
+    generate_random_base16_code,
+    get_image_size,
+    is_base64_image,
+    is_local_image,
+    is_public_url_image,
+    preprocess_image,
+)
 
 
 class WecoAI:
@@ -264,8 +271,8 @@ class WecoAI:
 
         # Upload the image to the S3 bucket
         image_name = generate_random_base16_code()
-        files = {'file': (f"{image_name}.{file_type}", upload_data)}
-        http_response = requests.post(response['url'], data=response['fields'], files=files)
+        files = {"file": (f"{image_name}.{file_type}", upload_data)}
+        http_response = requests.post(response["url"], data=response["fields"], files=files)
         if http_response.status_code == 204:
             pass
         else:

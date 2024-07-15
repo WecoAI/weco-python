@@ -1,3 +1,5 @@
+import random
+import string
 import base64
 import os
 import re
@@ -159,3 +161,20 @@ def preprocess_image(image: Image, file_type: str) -> Tuple:
     if file_type == "jpg":
         file_type = "jpeg"
     return image, file_type
+
+
+def generate_random_base16_code(length: int = 5):
+    """
+    Generate a random base16 code.
+
+    Parameters
+    ----------
+    length : int
+        The length of the code.
+
+    Returns
+    -------
+    str
+        The random base16 code.
+    """
+    return "".join(random.choices(string.hexdigits, k=length))

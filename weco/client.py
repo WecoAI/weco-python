@@ -10,7 +10,7 @@ import requests
 from PIL import Image
 
 from .constants import MAX_IMAGE_SIZE_MB, MAX_IMAGE_UPLOADS, MAX_TEXT_LENGTH, SUPPORTED_IMAGE_EXTENSIONS
-from .utils import get_image_size, is_base64_image, is_local_image, is_public_url_image, preprocess_image
+from .utils import get_image_size, is_base64_image, is_local_image, is_public_url_image, preprocess_image, generate_random_base16_code
 
 
 class WecoAI:
@@ -217,12 +217,14 @@ class WecoAI:
         """
         return self._build(task_description=task_description, is_async=False)
 
-    def _upload_image(self, image_info: Dict[str, Any]) -> str:
+    def _upload_image(self, fn_name: str, image_info: Dict[str, Any]) -> str:
         """
         Uploads an image to an S3 bucket and returns the URL of the uploaded image.
 
         Parameters
         ----------
+        fn_name : str
+            The name of the function for which the image is being uploaded.
         image_info : Dict[str, Any]
             A dictionary containing the image metadata.
 
@@ -256,17 +258,21 @@ class WecoAI:
         # TODO: Test the next lines till the end of the function
         # Request a presigned URL from the server
         endpoint = "upload_link"
-        request_data = {"file_type": file_type}
+        request_data = {"fn_name": fn_name, "file_type": file_type}
         # This needs to be a synchronous request since we need the presigned URL to upload the image
         response = self._make_request(endpoint=endpoint, data=request_data, is_async=False)
-        upload_link = response["url"]
 
         # Upload the image to the S3 bucket
-        headers = {"Content-Type": f"image/{file_type}"}
-        response = requests.put(upload_link, data=upload_data, headers=headers)
-        response.raise_for_status()
+        image_name = generate_random_base16_code()
+        files = {'file': (f"{image_name}.{file_type}", upload_data)}
+        http_response = requests.post(response['url'], data=response['fields'], files=files)
+        if http_response.status_code == 204:
+            pass
+        else:
+            raise ValueError("Image upload failed")
 
         # Return the URL of the uploaded image
+        upload_link = f"{response['url']}/{response['fields']['key']}"
         return upload_link
 
     def _validate_query(self, text_input: str, images_input: List[str]) -> List[Dict[str, Any]]:
@@ -397,7 +403,7 @@ class WecoAI:
             if info["source"] == "url":
                 url = info["image"]
             elif info["source"] == "base64" or info["source"] == "local":
-                url = self._upload_image(info)
+                url = self._upload_image(fn_name=fn_name, image_info=info)
             else:
                 raise ValueError(f"Image at index {i} must be a public URL or a path to a local image file.")
             image_urls.append(url)

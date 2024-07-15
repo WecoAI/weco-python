@@ -224,7 +224,7 @@ class WecoAI:
         """
         return self._build(task_description=task_description, is_async=False)
 
-    def _upload_image(self, fn_name: str, image_info: Dict[str, Any]) -> str:
+    def _upload_image(self, fn_name: str, upload_id: str, image_info: Dict[str, Any]) -> str:
         """
         Uploads an image to an S3 bucket and returns the URL of the uploaded image.
 
@@ -232,6 +232,8 @@ class WecoAI:
         ----------
         fn_name : str
             The name of the function for which the image is being uploaded.
+        upload_id: str
+            A unique identifier for the image upload.
         image_info : Dict[str, Any]
             A dictionary containing the image metadata.
 
@@ -265,7 +267,7 @@ class WecoAI:
         # TODO: Test the next lines till the end of the function
         # Request a presigned URL from the server
         endpoint = "upload_link"
-        request_data = {"fn_name": fn_name, "file_type": file_type}
+        request_data = {"fn_name": fn_name, "upload_id": upload_id, "file_type": file_type}
         # This needs to be a synchronous request since we need the presigned URL to upload the image
         response = self._make_request(endpoint=endpoint, data=request_data, is_async=False)
 
@@ -406,11 +408,10 @@ class WecoAI:
 
         # Create links for all images that are not public URLs and upload images
         image_urls = []
+        upload_id = generate_random_base16_code()
         for i, info in enumerate(image_info):
-            if info["source"] == "url":
-                url = info["image"]
-            elif info["source"] == "base64" or info["source"] == "local":
-                url = self._upload_image(fn_name=fn_name, image_info=info)
+            if info["source"] == "url" or info["source"] == "base64" or info["source"] == "local":
+                url = self._upload_image(fn_name=fn_name, upload_id=upload_id, image_info=info)
             else:
                 raise ValueError(f"Image at index {i} must be a public URL or a path to a local image file.")
             image_urls.append(url)

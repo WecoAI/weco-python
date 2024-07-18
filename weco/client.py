@@ -6,6 +6,7 @@ from io import BytesIO
 from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple
 
 import httpx
+from httpx import HTTPStatusError
 import requests
 from PIL import Image
 
@@ -57,29 +58,17 @@ class WecoAI:
             except KeyError:
                 raise ValueError("WECO_API_KEY must be passed to client or set as an environment variable")
         self.api_key = api_key
-
+        self.http2 = http2
+        self.timeout = timeout
         self.base_url = "https://function.api.weco.ai"
         # Setup clients
         self.client = httpx.Client(http2=http2, timeout=timeout)
         self.async_client = httpx.AsyncClient(http2=http2, timeout=timeout)
 
-    def __del__(self):
-        """Closes the HTTP clients when the WecoAI instance is deleted."""
-        try:
-            self.client.close()
-            if not self.async_client.is_closed:
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        loop.create_task(self.async_client.aclose())
-                    else:
-                        loop.run_until_complete(self.async_client.aclose())
-                except RuntimeError:
-                    # If the event loop is closed, we can't do anything about it
-                    pass
-        except AttributeError:
-            # If the client is not initialized, we can't do anything about it
-            pass
+    def close(self):
+        """Close both synchronous and asynchronous clients."""
+        self.client.close()
+        asyncio.run(self.async_client.aclose())
 
     def _headers(self) -> Dict[str, str]:
         """Constructs the headers for the API requests."""
@@ -111,22 +100,39 @@ class WecoAI:
         if is_async:
 
             async def _request():
-                response = await self.async_client.post(url, json=data, headers=headers)
-                response.raise_for_status()
-                return response.json()
+                try:
+                    response = await self.async_client.post(url, json=data, headers=headers)
+                    response.raise_for_status()
+                    return response.json()
+                except HTTPStatusError as e:
+                    # Handle HTTP errors (4xx and 5xx status codes)
+                    error_message = f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
+                    raise ValueError(error_message) from e
+                except Exception as e:
+                    # Handle other exceptions
+                    raise ValueError(f"An error occurred: {str(e)}") from e
+            
 
             return _request()
         else:
 
             def _request():
-                response = self.client.post(url, json=data, headers=headers)
-                response.raise_for_status()
-                return response.json()
+                try:
+                    response = self.client.post(url, json=data, headers=headers)
+                    response.raise_for_status()
+                    return response.json()
+                except HTTPStatusError as e:
+                    # Handle HTTP errors (4xx and 5xx status codes)
+                    error_message = f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
+                    raise ValueError(error_message) from e
+                except Exception as e:
+                    # Handle other exceptions
+                    raise ValueError(f"An error occurred: {str(e)}") from e
 
             return _request()
 
-    def _process_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
-        """Processes the API response and handles warnings.
+    def _process_query_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
+        """Processes the query response and handles warnings.
 
         Parameters
         ----------
@@ -264,7 +270,6 @@ class WecoAI:
         processed_img.save(upload_data, format=file_type)
         upload_data = upload_data.getvalue()
 
-        # TODO: Test the next lines till the end of the function
         # Request a presigned URL from the server
         endpoint = "upload_link"
         request_data = {"fn_name": fn_name, "upload_id": upload_id, "file_type": file_type}
@@ -281,7 +286,7 @@ class WecoAI:
             raise ValueError("Image upload failed")
 
         # Return the URL of the uploaded image
-        upload_link = f"{response['url']}/{response['fields']['key']}"
+        upload_link = f"{response['url']}{response['fields']['key']}"
         return upload_link
 
     def _validate_query(self, text_input: str, images_input: List[str]) -> List[Dict[str, Any]]:
@@ -328,23 +333,13 @@ class WecoAI:
         for image in images_input:
             is_base64, base64_info = is_base64_image(maybe_base64=image)
             if is_base64:
-                try:
-                    file_type = base64_info["media_type"].split("/")[1]
-                except Exception as _:
-                    raise ValueError(
-                        "Invalid image base64 encoding. Try providing a valid image URL, local path or base64 encoded string."
-                    )
+                file_type = base64_info["media_type"].split("/")[1]
 
             is_public_url = is_public_url_image(maybe_url_image=image)
             if is_public_url:
                 response = requests.get(image)
                 response.raise_for_status()
-                try:
-                    file_type = response.headers["content-type"].split("/")[1]
-                except Exception as _:
-                    raise ValueError(
-                        "Invalid image URL. Try providing a valid image URL, local path or base64 encoded string."
-                    )
+                file_type = response.headers["content-type"].split("/")[1]
 
             is_local = is_local_image(maybe_local_image=image)
             if is_local:
@@ -425,12 +420,12 @@ class WecoAI:
 
             async def _async_query():
                 response = await request
-                return self._process_response(response=response)
+                return self._process_query_response(response=response)
 
             return _async_query()
         else:
             response = request  # the request has already been made and the response is available
-            return self._process_response(response=response)
+            return self._process_query_response(response=response)
 
     async def aquery(
         self, fn_name: str, text_input: Optional[str] = "", images_input: Optional[List[str]] = []

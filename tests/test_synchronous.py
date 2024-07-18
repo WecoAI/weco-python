@@ -61,7 +61,7 @@ def test_image_query(image_evaluator):
 @pytest.fixture
 def text_and_image_evaluator():
     fn_name, fn_desc = build(
-        task_description="Evaluate, solve and arrive at a numerical answer for the image provided. Provide a json object with 'answer' and 'explanation' keys."
+        task_description="Evaluate, solve and arrive at a numerical answer for the image provided. Perform any additional things if instructed. Provide a json object with 'answer' and 'explanation' keys."
     )
     return fn_name, fn_desc
 

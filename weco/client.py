@@ -6,8 +6,8 @@ from io import BytesIO
 from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple
 
 import httpx
-from httpx import HTTPStatusError
 import requests
+from httpx import HTTPStatusError
 from PIL import Image
 
 from .constants import MAX_IMAGE_SIZE_MB, MAX_IMAGE_UPLOADS, MAX_TEXT_LENGTH, SUPPORTED_IMAGE_EXTENSIONS
@@ -111,7 +111,6 @@ class WecoAI:
                 except Exception as e:
                     # Handle other exceptions
                     raise ValueError(f"An error occurred: {str(e)}") from e
-            
 
             return _request()
         else:

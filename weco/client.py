@@ -3,7 +3,7 @@ import base64
 import os
 import warnings
 from io import BytesIO
-from typing import List, Tuple, Dict, Callable, Coroutine, Any, Union, Optional
+from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple, Union
 
 import httpx
 import requests

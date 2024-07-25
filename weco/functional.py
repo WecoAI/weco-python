@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from .client import WecoAI
 
+
 # TODO: Implement the closing stuff for the client
 def build(task_description: str, api_key: str = None) -> tuple[str, str]:
     """Builds a specialized function synchronously given a task description.

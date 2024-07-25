@@ -3,7 +3,7 @@ import base64
 import os
 import warnings
 from io import BytesIO
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple
+from typing import List, Tuple, Dict, Callable, Coroutine, Any, Union, Optional
 
 import httpx
 import requests
@@ -32,7 +32,7 @@ class WecoAI:
         The API key used for authentication.
     """
 
-    def __init__(self, api_key: str = None, timeout: float = 30.0, http2: bool = True) -> None:
+    def __init__(self, api_key: str = None, timeout: float = 60.0, http2: bool = True) -> None:
         """Initializes the WecoAI client with the provided API key and base URL.
 
         Parameters
@@ -158,7 +158,7 @@ class WecoAI:
             "latency_ms": response["latency_ms"],
         }
 
-    def _build(self, task_description: str, is_async: bool) -> Tuple[str, str] | Coroutine[Any, Any, Tuple[str, str]]:
+    def _build(self, task_description: str, is_async: bool) -> Union[Tuple[str, str], Coroutine[Any, Any, Tuple[str, str]]]:
         """Internal method to handle both synchronous and asynchronous build requests.
 
         Parameters
@@ -170,7 +170,7 @@ class WecoAI:
 
         Returns
         -------
-        tuple[str, str] | Coroutine[Any, Any, tuple[str, str]]
+        Union[tuple[str, str], Coroutine[Any, Any, tuple[str, str]]]
             A tuple containing the name and description of the function, or a coroutine that returns such a tuple.
 
         Raises
@@ -373,7 +373,7 @@ class WecoAI:
 
     def _query(
         self, is_async: bool, fn_name: str, text_input: Optional[str], images_input: Optional[List[str]]
-    ) -> Dict[str, Any] | Coroutine[Any, Any, Dict[str, Any]]:
+    ) -> Union[Dict[str, Any], Coroutine[Any, Any, Dict[str, Any]]]:
         """Internal method to handle both synchronous and asynchronous query requests.
 
         Parameters
@@ -389,7 +389,7 @@ class WecoAI:
 
         Returns
         -------
-        dict | Coroutine[Any, Any, dict]
+        Union[Dict[str, Any], Coroutine[Any, Any, dict]]
             A dictionary containing the query results, or a coroutine that returns such a dictionary.
 
         Raises
@@ -468,7 +468,7 @@ class WecoAI:
         """
         return self._query(fn_name=fn_name, text_input=text_input, images_input=images_input, is_async=False)
 
-    def batch_query(self, fn_names: str | List[str], batch_inputs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def batch_query(self, fn_names: Union[str, List[str]], batch_inputs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Synchronously queries multiple functions using asynchronous calls internally.
 
         This method uses the asynchronous queries to submit all queries concurrently
@@ -476,7 +476,7 @@ class WecoAI:
 
         Parameters
         ----------
-        fn_name : str | List[str]
+        fn_name : Union[str, List[str]]
             The name of the function or a list of function names to query.
             Note that if a single function name is provided, it will be used for all queries.
             If a list of function names is provided, the length must match the number of queries.

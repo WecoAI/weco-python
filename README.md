@@ -6,6 +6,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10.14-blue)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
+<!-- TODO: Update examples -->
 # $f$(👷‍♂️)
 
 <a href="https://colab.research.google.com/github/WecoAI/weco-python/blob/main/examples/cookbook.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" width=110 height=20/></a>
@@ -29,6 +30,7 @@ pip install weco
 - The **query** function allows you to test and use the newly created function in your own code.
 - We offer asynchronous versions of the above clients.
 - We provide a **batch_query** functions that allows users to batch functions for various inputs as well as multiple inputs for the same function in a query. This is helpful to make a large number of queries more efficiently.
+- We also offer multimodality capabilities. You can now query our client with both **language** AND **vision** inputs!
 
 We provide both services in two ways:
 - `weco.WecoAI` client to be used when you want to maintain the same client service across a portion of code. This is better for dense service usage.
@@ -45,18 +47,48 @@ export WECO_API_KEY=<YOUR_WECO_API_KEY>
 ## Example
 
 We create a function on the [web console](https://weco-app.vercel.app/function) for the following task:
-> "I want to evaluate the feasibility of a machine learning task. Give me a json object with three keys - 'feasibility', 'justification', and 'suggestions'."
+> "Analyze a business idea and provide a structured evaluation. Output a JSON with 'viability_score' (0-100), 'strengths' (list), 'weaknesses' (list), and 'next_steps' (list)."
 
 Now, you're ready to query this function anywhere in your code!
 
 ```python
 from weco import query
 response = query(
-    fn_name=fn_name,
-    fn_input="I want to train a model to predict house prices using the Boston Housing dataset hosted on Kaggle.",
+    fn_name="BusinessIdeaAnalyzer-XYZ123",  # Replace with your actual function name
+    text_input="A subscription service for personalized, AI-generated bedtime stories for children."
 )
 ```
 
 For more examples and an advanced user guide, check out our function builder [cookbook](examples/cookbook.ipynb).
 
 ## Happy building $f$(👷‍♂️)!
+
+## Contributing
+
+We value your contributions! If you believe you can help to improve our package enabling people to build AI with AI, please contribute!
+
+Use the following steps as a guideline to help you make contributions:
+
+1. Download and install package from source:
+   ```bash
+   git clone https://github.com/WecoAI/weco-python.git
+   cd weco-python
+   pip install -e ".[dev]"
+   ```
+
+2. Create a new branch for your feature or bugfix:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+3. Make your changes and run tests to ensure everything is working:
+   
+   > **Tests can be expensive to run as they make LLM requests with the API key being used so it is the developers best interests to write small and simple tests that adds coverage for a large portion of the package.**
+   
+   ```bash
+   pytest -n auto tests
+   ```
+
+4. Commit and push your changes, then open a PR for us to view 😁
+
+Please ensure your code follows our style guidelines (Numpy docstrings) and includes appropriate tests. We appreciate your contributions!

@@ -32,7 +32,7 @@ class WecoAI:
         The API key used for authentication.
     """
 
-    def __init__(self, api_key: str = None, timeout: float = 60.0, http2: bool = True) -> None:
+    def __init__(self, api_key: str = None, timeout: float = 120.0, http2: bool = True) -> None:
         """Initializes the WecoAI client with the provided API key and base URL.
 
         Parameters

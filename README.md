@@ -30,6 +30,7 @@ pip install weco
 - The **query** function allows you to test and use the newly created function in your own code.
 - We offer asynchronous versions of the above clients.
 - We provide a **batch_query** functions that allows users to batch functions for various inputs as well as multiple inputs for the same function in a query. This is helpful to make a large number of queries more efficiently.
+- We also offer multimodality capabilities. You can now query our client with both **language** AND **vision** inputs!
 
 We provide both services in two ways:
 - `weco.WecoAI` client to be used when you want to maintain the same client service across a portion of code. This is better for dense service usage.
@@ -46,15 +47,15 @@ export WECO_API_KEY=<YOUR_WECO_API_KEY>
 ## Example
 
 We create a function on the [web console](https://weco-app.vercel.app/function) for the following task:
-> "I want to evaluate the feasibility of a machine learning task. Give me a json object with three keys - 'feasibility', 'justification', and 'suggestions'."
+> "Analyze a business idea and provide a structured evaluation. Output a JSON with 'viability_score' (0-100), 'strengths' (list), 'weaknesses' (list), and 'next_steps' (list)."
 
 Now, you're ready to query this function anywhere in your code!
 
 ```python
 from weco import query
 response = query(
-    fn_name=fn_name,
-    fn_input="I want to train a model to predict house prices using the Boston Housing dataset hosted on Kaggle.",
+    fn_name="BusinessIdeaAnalyzer-XYZ123",  # Replace with your actual function name
+    text_input="A subscription service for personalized, AI-generated bedtime stories for children."
 )
 ```
 

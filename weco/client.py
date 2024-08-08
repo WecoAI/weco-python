@@ -276,8 +276,7 @@ class WecoAI:
         response = self._make_request(endpoint=endpoint, data=request_data, is_async=False)
 
         # Upload the image to the S3 bucket
-        image_name = generate_random_base16_code()
-        files = {"file": (f"{image_name}.{file_type}", upload_data)}
+        files = {"file": upload_data}
         http_response = requests.post(response["url"], data=response["fields"], files=files)
         if http_response.status_code == 204:
             pass

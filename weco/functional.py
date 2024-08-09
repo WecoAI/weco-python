@@ -3,14 +3,15 @@ from typing import Any, Dict, List, Optional
 from .client import WecoAI
 
 
-# TODO: Implement the closing stuff for the client
-def build(task_description: str, api_key: str = None) -> tuple[str, str]:
+def build(task_description: str, multimodal: bool = False, api_key: str = None) -> tuple[str, int, str]:
     """Builds a specialized function synchronously given a task description.
 
     Parameters
     ----------
     task_description : str
         A description of the task for which the function is being built.
+    multimodal : bool, optional
+        A flag to indicate if the function should be multimodal. Default is False.
     api_key : str
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
 
@@ -20,32 +21,34 @@ def build(task_description: str, api_key: str = None) -> tuple[str, str]:
         A tuple containing the name and description of the function.
     """
     client = WecoAI(api_key=api_key)
-    response = client.build(task_description=task_description)
+    response = client.build(task_description=task_description, multimodal=multimodal)
     return response
 
 
-async def abuild(task_description: str, api_key: str = None) -> tuple[str, str]:
+async def abuild(task_description: str, multimodal: bool = False, api_key: str = None) -> tuple[str, int, str]:
     """Builds a specialized function asynchronously given a task description.
 
     Parameters
     ----------
     task_description : str
         A description of the task for which the function is being built.
+    multimodal : bool, optional
+        A flag to indicate if the function should be multimodal. Default is False.
     api_key : str
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
 
     Returns
     -------
     tuple[str, str]
-        A tuple containing the name and description of the function.
+        A tuple containing the name, version number and description of the function.
     """
     client = WecoAI(api_key=api_key)
-    response = await client.abuild(task_description=task_description)
+    response = await client.abuild(task_description=task_description, multimodal=multimodal)
     return response
 
 
 def query(
-    fn_name: str, text_input: Optional[str] = "", images_input: Optional[List[str]] = [], api_key: Optional[str] = None
+    fn_name: str, version_number: Optional[int] = -1, text_input: Optional[str] = "", images_input: Optional[List[str]] = [], api_key: Optional[str] = None
 ) -> Dict[str, Any]:
     """Queries a function synchronously with the given function ID and input.
 
@@ -53,6 +56,8 @@ def query(
     ----------
     fn_name : str
         The name of the function to query.
+    version_number : int, optional
+        The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
     text_input : str, optional
         The text input to the function.
     images_input : List[str], optional
@@ -67,12 +72,12 @@ def query(
         and the latency in milliseconds.
     """
     client = WecoAI(api_key=api_key)
-    response = client.query(fn_name=fn_name, text_input=text_input, images_input=images_input)
+    response = client.query(fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input)
     return response
 
 
 async def aquery(
-    fn_name: str, text_input: Optional[str] = "", images_input: Optional[List[str]] = [], api_key: Optional[str] = None
+    fn_name: str, version_number: Optional[int] = -1, text_input: Optional[str] = "", images_input: Optional[List[str]] = [], api_key: Optional[str] = None
 ) -> Dict[str, Any]:
     """Queries a function asynchronously with the given function ID and input.
 
@@ -80,6 +85,8 @@ async def aquery(
     ----------
     fn_name : str
         The name of the function to query.
+    version_number : int, optional
+        The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
     text_input : str, optional
         The text input to the function.
     images_input : List[str], optional
@@ -94,12 +101,12 @@ async def aquery(
         and the latency in milliseconds.
     """
     client = WecoAI(api_key=api_key)
-    response = await client.aquery(fn_name=fn_name, text_input=text_input, images_input=images_input)
+    response = await client.aquery(fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input)
     return response
 
 
 def batch_query(
-    fn_names: str | List[str], batch_inputs: List[Dict[str, Any]], api_key: Optional[str] = None
+    fn_name: str, batch_inputs: List[Dict[str, Any]], version_number: Optional[int] = -1, api_key: Optional[str] = None
 ) -> List[Dict[str, Any]]:
     """Synchronously queries multiple functions using asynchronous calls internally.
 
@@ -117,7 +124,9 @@ def batch_query(
        A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g.,
        when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]}
        and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
-       Note that the index of each input must correspond to the index of the function name when both inputs are lists.
+
+    version_number : int, optional
+        The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
 
     api_key : str, optional
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
@@ -129,5 +138,5 @@ def batch_query(
         in the same order as the input queries.
     """
     client = WecoAI(api_key=api_key)
-    responses = client.batch_query(fn_names=fn_names, batch_inputs=batch_inputs)
+    responses = client.batch_query(fn_name=fn_name, version_number=version_number, batch_inputs=batch_inputs)
     return responses

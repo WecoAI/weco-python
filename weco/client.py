@@ -405,6 +405,8 @@ class WecoAI:
         ValueError
             If the input is invalid.
         """
+        warnings.warn("Setting the version number of the function is not yet supported. Currently, the first version of the function will be used i.e., version 0.")
+        version_number = 0
         # Validate the input
         image_info = self._validate_query(text_input=text_input, images_input=images_input)
 

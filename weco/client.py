@@ -25,11 +25,18 @@ class WecoAI:
     """A client for the WecoAI function builder API that allows users to build and query specialized functions built by LLMs.
     The user must simply provide a task description to build a function, and then query the function with an input to get the result they need.
     Our client supports both synchronous and asynchronous request paradigms and uses HTTP/2 for faster communication with the API.
+    Support for multimodality is included.
 
     Attributes
     ----------
     api_key : str
         The API key used for authentication.
+    
+    timeout : float
+        The timeout for the HTTP requests in seconds. Default is 120.0.
+
+    http2 : bool
+        Whether to use HTTP/2 protocol for the HTTP requests. Default is True.
     """
 
     def __init__(self, api_key: str = None, timeout: float = 120.0, http2: bool = True) -> None:
@@ -41,7 +48,7 @@ class WecoAI:
             The API key used for authentication. If not provided, the client will attempt to read it from the environment variable - WECO_API_KEY.
 
         timeout : float, optional
-            The timeout for the HTTP requests in seconds (default is 30.0).
+            The timeout for the HTTP requests in seconds (default is 120.0).
 
         http2 : bool, optional
             Whether to use HTTP/2 protocol for the HTTP requests (default is True).
@@ -405,8 +412,6 @@ class WecoAI:
         ValueError
             If the input is invalid.
         """
-        warnings.warn("Setting the version number of the function is not yet supported. Currently, the first version of the function will be used i.e., version 0.")
-        version_number = 0
         # Validate the input
         image_info = self._validate_query(text_input=text_input, images_input=images_input)
 
@@ -477,7 +482,7 @@ class WecoAI:
         Returns
         -------
         dict
-               A dictionary containing the output of the function, the number of input tokens, the number of output tokens,
+            A dictionary containing the output of the function, the number of input tokens, the number of output tokens,
             and the latency in milliseconds.
         """
         return self._query(fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, is_async=False)

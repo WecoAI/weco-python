@@ -26,7 +26,7 @@ async def assert_query_response(query_response):
 async def text_evaluator():
     fn_name, version_number, fn_desc = await abuild(
         task_description="Evaluate the sentiment of the given text. Provide a json object with 'sentiment' and 'explanation' keys.",
-        multimodal=False
+        multimodal=False,
     )
     return fn_name, version_number, fn_desc
 
@@ -44,7 +44,7 @@ async def test_text_aquery(text_evaluator):
 async def image_evaluator():
     fn_name, version_number, fn_desc = await abuild(
         task_description="Describe the contents of the given images. Provide a json object with 'description' and 'objects' keys.",
-        multimodal=True
+        multimodal=True,
     )
     return fn_name, version_number, fn_desc
 
@@ -69,7 +69,7 @@ async def test_image_aquery(image_evaluator):
 async def text_and_image_evaluator():
     fn_name, version_number, fn_desc = await abuild(
         task_description="Evaluate, solve and arrive at a numerical answer for the image provided. Provide a json object with 'answer' and 'explanation' keys.",
-        multimodal=True
+        multimodal=True,
     )
     return fn_name, version_number, fn_desc
 

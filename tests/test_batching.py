@@ -9,7 +9,7 @@ from weco import batch_query, build
 def ml_task_evaluator():
     fn_name, version_number, _ = build(
         task_description="I want to evaluate the feasibility of a machine learning task. Give me a json object with three keys - 'feasibility', 'justification', and 'suggestions'.",
-        multimodal=False
+        multimodal=False,
     )
     return fn_name, version_number
 
@@ -18,7 +18,9 @@ def ml_task_evaluator():
 def ml_task_inputs():
     return [
         {"text_input": "I want to train a model to predict house prices using the Boston Housing dataset hosted on Kaggle."},
-        {"text_input": "I want to train a model to classify digits using the MNIST dataset hosted on Kaggle using a Google Colab notebook."},
+        {
+            "text_input": "I want to train a model to classify digits using the MNIST dataset hosted on Kaggle using a Google Colab notebook."
+        },
     ]
 
 
@@ -26,7 +28,7 @@ def ml_task_inputs():
 def image_evaluator():
     fn_name, version_number, _ = build(
         task_description="Describe the contents of the given images. Provide a json object with 'description' and 'objects' keys.",
-        multimodal=True
+        multimodal=True,
     )
     return fn_name, version_number
 
@@ -34,7 +36,11 @@ def image_evaluator():
 @pytest.fixture
 def image_inputs():
     return [
-        {"images_input": ["https://www.integratedtreatmentservices.co.uk/wp-content/uploads/2013/12/Objects-of-Reference.jpg"]},
+        {
+            "images_input": [
+                "https://www.integratedtreatmentservices.co.uk/wp-content/uploads/2013/12/Objects-of-Reference.jpg"
+            ]
+        },
         {"images_input": ["https://t4.ftcdn.net/jpg/05/70/90/23/360_F_570902339_kNj1reH40GFXakTy98EmfiZHci2xvUCS.jpg"]},
     ]
 

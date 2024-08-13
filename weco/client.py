@@ -31,7 +31,7 @@ class WecoAI:
     ----------
     api_key : str
         The API key used for authentication.
-    
+
     timeout : float
         The timeout for the HTTP requests in seconds. Default is 120.0.
 
@@ -160,17 +160,19 @@ class WecoAI:
             "latency_ms": response["latency_ms"],
         }
 
-    def _build(self, task_description: str, multimodal: bool, is_async: bool) -> Union[Tuple[str, int, str], Coroutine[Any, Any, Tuple[str, int, str]]]:
+    def _build(
+        self, task_description: str, multimodal: bool, is_async: bool
+    ) -> Union[Tuple[str, int, str], Coroutine[Any, Any, Tuple[str, int, str]]]:
         """Internal method to handle both synchronous and asynchronous build requests.
 
         Parameters
         ----------
         task_description : str
             A description of the task for which the function is being built.
-        
+
         multimodal : bool
             Whether the function is multimodal or not.
-        
+
         is_async : bool
             Whether to perform an asynchronous request.
 
@@ -212,7 +214,7 @@ class WecoAI:
         ----------
         task_description : str
             A description of the task for which the function is being built.
-        
+
         multimodal : bool, optional
             Whether the function is multimodal or not (default is False).
 
@@ -230,7 +232,7 @@ class WecoAI:
         ----------
         task_description : str
             A description of the task for which the function is being built.
-        
+
         multimodal : bool, optional
             Whether the function is multimodal or not (default is False).
 
@@ -385,7 +387,12 @@ class WecoAI:
         return image_info
 
     def _query(
-        self, is_async: bool, fn_name: str, version_number: Optional[int], text_input: Optional[str], images_input: Optional[List[str]]
+        self,
+        is_async: bool,
+        fn_name: str,
+        version_number: Optional[int],
+        text_input: Optional[str],
+        images_input: Optional[List[str]],
     ) -> Union[Dict[str, Any], Coroutine[Any, Any, Dict[str, Any]]]:
         """Internal method to handle both synchronous and asynchronous query requests.
 
@@ -442,7 +449,11 @@ class WecoAI:
             return self._process_query_response(response=response)
 
     async def aquery(
-        self, fn_name: str, version_number: Optional[int] = -1, text_input: Optional[str] = "", images_input: Optional[List[str]] = []
+        self,
+        fn_name: str,
+        version_number: Optional[int] = -1,
+        text_input: Optional[str] = "",
+        images_input: Optional[List[str]] = [],
     ) -> Dict[str, Any]:
         """Asynchronously queries a function with the given function ID and input.
 
@@ -463,9 +474,17 @@ class WecoAI:
             A dictionary containing the output of the function, the number of input tokens, the number of output tokens,
             and the latency in milliseconds.
         """
-        return await self._query(fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, is_async=True)
+        return await self._query(
+            fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, is_async=True
+        )
 
-    def query(self, fn_name: str, version_number: Optional[int] = -1, text_input: Optional[str] = "", images_input: Optional[List[str]] = []) -> Dict[str, Any]:
+    def query(
+        self,
+        fn_name: str,
+        version_number: Optional[int] = -1,
+        text_input: Optional[str] = "",
+        images_input: Optional[List[str]] = [],
+    ) -> Dict[str, Any]:
         """Synchronously queries a function with the given function ID and input.
 
         Parameters
@@ -485,9 +504,13 @@ class WecoAI:
             A dictionary containing the output of the function, the number of input tokens, the number of output tokens,
             and the latency in milliseconds.
         """
-        return self._query(fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, is_async=False)
+        return self._query(
+            fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, is_async=False
+        )
 
-    def batch_query(self, fn_name: str, batch_inputs: List[Dict[str, Any]], version_number: Optional[int] = -1) -> List[Dict[str, Any]]:
+    def batch_query(
+        self, fn_name: str, batch_inputs: List[Dict[str, Any]], version_number: Optional[int] = -1
+    ) -> List[Dict[str, Any]]:
         """Batch queries a function version with a list of inputs.
 
         Parameters
@@ -499,7 +522,7 @@ class WecoAI:
             A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g.,
             when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]}
             and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
-        
+
         version_number : int, optional
             The version number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
 
@@ -509,11 +532,11 @@ class WecoAI:
             A list of dictionaries, each containing the output of a function query,
             in the same order as the input queries.
         """
+
         async def run_queries():
-            tasks = list(map(
-                lambda fn_input: self.aquery(fn_name=fn_name, version_number=version_number, **fn_input),
-                batch_inputs
-            ))
+            tasks = list(
+                map(lambda fn_input: self.aquery(fn_name=fn_name, version_number=version_number, **fn_input), batch_inputs)
+            )
             return await asyncio.gather(*tasks)
 
         return asyncio.run(run_queries())

@@ -48,7 +48,11 @@ async def abuild(task_description: str, multimodal: bool = False, api_key: str =
 
 
 def query(
-    fn_name: str, version_number: Optional[int] = -1, text_input: Optional[str] = "", images_input: Optional[List[str]] = [], api_key: Optional[str] = None
+    fn_name: str,
+    version_number: Optional[int] = -1,
+    text_input: Optional[str] = "",
+    images_input: Optional[List[str]] = [],
+    api_key: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Queries a function synchronously with the given function ID and input.
 
@@ -77,7 +81,11 @@ def query(
 
 
 async def aquery(
-    fn_name: str, version_number: Optional[int] = -1, text_input: Optional[str] = "", images_input: Optional[List[str]] = [], api_key: Optional[str] = None
+    fn_name: str,
+    version_number: Optional[int] = -1,
+    text_input: Optional[str] = "",
+    images_input: Optional[List[str]] = [],
+    api_key: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Queries a function asynchronously with the given function ID and input.
 
@@ -101,7 +109,9 @@ async def aquery(
         and the latency in milliseconds.
     """
     client = WecoAI(api_key=api_key)
-    response = await client.aquery(fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input)
+    response = await client.aquery(
+        fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input
+    )
     return response
 
 

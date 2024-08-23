@@ -79,7 +79,13 @@ def query(
         and the latency in milliseconds.
     """
     client = WecoAI(api_key=api_key)
-    response = client.query(fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, return_reasoning=return_reasoning)
+    response = client.query(
+        fn_name=fn_name,
+        version_number=version_number,
+        text_input=text_input,
+        images_input=images_input,
+        return_reasoning=return_reasoning,
+    )
     return response
 
 
@@ -116,13 +122,21 @@ async def aquery(
     """
     client = WecoAI(api_key=api_key)
     response = await client.aquery(
-        fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, return_reasoning=return_reasoning
+        fn_name=fn_name,
+        version_number=version_number,
+        text_input=text_input,
+        images_input=images_input,
+        return_reasoning=return_reasoning,
     )
     return response
 
 
 def batch_query(
-    fn_name: str, batch_inputs: List[Dict[str, Any]], version_number: Optional[int] = -1, return_reasoning: Optional[bool] = False, api_key: Optional[str] = None
+    fn_name: str,
+    batch_inputs: List[Dict[str, Any]],
+    version_number: Optional[int] = -1,
+    return_reasoning: Optional[bool] = False,
+    api_key: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Synchronously queries multiple functions using asynchronous calls internally.
 
@@ -153,5 +167,7 @@ def batch_query(
         in the same order as the input queries.
     """
     client = WecoAI(api_key=api_key)
-    responses = client.batch_query(fn_name=fn_name, version_number=version_number, batch_inputs=batch_inputs, return_reasoning=return_reasoning)
+    responses = client.batch_query(
+        fn_name=fn_name, version_number=version_number, batch_inputs=batch_inputs, return_reasoning=return_reasoning
+    )
     return responses

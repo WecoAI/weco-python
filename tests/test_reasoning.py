@@ -7,7 +7,8 @@ def assert_query_response(query_response):
     assert isinstance(query_response, dict)
     assert isinstance(query_response["output"], dict)
     assert isinstance(query_response["reasoning_steps"], list)
-    for step in query_response["reasoning_steps"]: assert isinstance(step, str)
+    for step in query_response["reasoning_steps"]:
+        assert isinstance(step, str)
     assert isinstance(query_response["in_tokens"], int)
     assert isinstance(query_response["out_tokens"], int)
     assert isinstance(query_response["latency_ms"], float)
@@ -24,10 +25,13 @@ def text_reasoning_evaluator():
 
 def test_text_reasoning_query(text_reasoning_evaluator):
     fn_name, version_number, _ = text_reasoning_evaluator
-    query_response = query(fn_name=fn_name, version_number=version_number, text_input="I love this product!", return_reasoning=True)
+    query_response = query(
+        fn_name=fn_name, version_number=version_number, text_input="I love this product!", return_reasoning=True
+    )
 
     assert_query_response(query_response)
     assert set(query_response["output"].keys()) == {"sentiment", "explanation"}
+
 
 @pytest.fixture
 def vision_reasoning_evaluator():

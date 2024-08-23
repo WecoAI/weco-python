@@ -396,7 +396,7 @@ class WecoAI:
         version_number: Optional[int],
         text_input: Optional[str],
         images_input: Optional[List[str]],
-        return_reasoning: Optional[bool]
+        return_reasoning: Optional[bool],
     ) -> Union[Dict[str, Any], Coroutine[Any, Any, Dict[str, Any]]]:
         """Internal method to handle both synchronous and asynchronous query requests.
 
@@ -440,7 +440,13 @@ class WecoAI:
 
         # Make the request
         endpoint = "query"
-        data = {"name": fn_name, "text": text_input, "images": image_urls, "version_number": version_number, "return_reasoning": return_reasoning}
+        data = {
+            "name": fn_name,
+            "text": text_input,
+            "images": image_urls,
+            "version_number": version_number,
+            "return_reasoning": return_reasoning,
+        }
         request = self._make_request(endpoint=endpoint, data=data, is_async=is_async)
 
         if is_async:
@@ -460,7 +466,7 @@ class WecoAI:
         version_number: Optional[int] = -1,
         text_input: Optional[str] = "",
         images_input: Optional[List[str]] = [],
-        return_reasoning: Optional[bool] = False
+        return_reasoning: Optional[bool] = False,
     ) -> Dict[str, Any]:
         """Asynchronously queries a function with the given function ID and input.
 
@@ -484,7 +490,12 @@ class WecoAI:
             and the latency in milliseconds.
         """
         return await self._query(
-            fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, return_reasoning=return_reasoning, is_async=True
+            fn_name=fn_name,
+            version_number=version_number,
+            text_input=text_input,
+            images_input=images_input,
+            return_reasoning=return_reasoning,
+            is_async=True,
         )
 
     def query(
@@ -493,7 +504,7 @@ class WecoAI:
         version_number: Optional[int] = -1,
         text_input: Optional[str] = "",
         images_input: Optional[List[str]] = [],
-        return_reasoning: Optional[bool] = False
+        return_reasoning: Optional[bool] = False,
     ) -> Dict[str, Any]:
         """Synchronously queries a function with the given function ID and input.
 
@@ -517,11 +528,20 @@ class WecoAI:
             and the latency in milliseconds.
         """
         return self._query(
-            fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, return_reasoning=return_reasoning, is_async=False
+            fn_name=fn_name,
+            version_number=version_number,
+            text_input=text_input,
+            images_input=images_input,
+            return_reasoning=return_reasoning,
+            is_async=False,
         )
 
     def batch_query(
-        self, fn_name: str, batch_inputs: List[Dict[str, Any]], version_number: Optional[int] = -1, return_reasoning: Optional[bool] = False
+        self,
+        fn_name: str,
+        batch_inputs: List[Dict[str, Any]],
+        version_number: Optional[int] = -1,
+        return_reasoning: Optional[bool] = False,
     ) -> List[Dict[str, Any]]:
         """Batch queries a function version with a list of inputs.
 
@@ -547,7 +567,12 @@ class WecoAI:
 
         async def run_queries():
             tasks = list(
-                map(lambda fn_input: self.aquery(fn_name=fn_name, version_number=version_number, return_reasoning=return_reasoning, **fn_input), batch_inputs)
+                map(
+                    lambda fn_input: self.aquery(
+                        fn_name=fn_name, version_number=version_number, return_reasoning=return_reasoning, **fn_input
+                    ),
+                    batch_inputs,
+                )
             )
             return await asyncio.gather(*tasks)
 

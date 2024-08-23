@@ -19,6 +19,7 @@ def assert_query_response(query_response):
     assert isinstance(query_response["in_tokens"], int)
     assert isinstance(query_response["out_tokens"], int)
     assert isinstance(query_response["latency_ms"], float)
+    assert "reasoning_steps" not in query_response
 
 
 @pytest.fixture

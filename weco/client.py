@@ -39,7 +39,7 @@ class WecoAI:
         Whether to use HTTP/2 protocol for the HTTP requests. Default is True.
     """
 
-    def __init__(self, api_key: str = None, timeout: float = 120.0, http2: bool = True) -> None:
+    def __init__(self, api_key: Union[str, None] = None, timeout: float = 120.0, http2: bool = True) -> None:
         """Initializes the WecoAI client with the provided API key and base URL.
 
         Parameters
@@ -67,7 +67,8 @@ class WecoAI:
         self.api_key = api_key
         self.http2 = http2
         self.timeout = timeout
-        self.base_url = "https://function.api.weco.ai"
+        # self.base_url = "https://function.api.weco.ai"
+        self.base_url = "https://function-dev.api.weco.ai"
         # Setup clients
         self.client = httpx.Client(http2=http2, timeout=timeout)
         self.async_client = httpx.AsyncClient(http2=http2, timeout=timeout)
@@ -153,12 +154,15 @@ class WecoAI:
         for _warning in response.get("warnings", []):
             warnings.warn(_warning)
 
-        return {
+        returned_response = {
             "output": response["response"],
             "in_tokens": response["num_input_tokens"],
             "out_tokens": response["num_output_tokens"],
             "latency_ms": response["latency_ms"],
         }
+        if "reasoning_steps" in response:
+            returned_response["reasoning_steps"] = response["reasoning_steps"]
+        return returned_response
 
     def _build(
         self, task_description: str, multimodal: bool, is_async: bool
@@ -393,6 +397,7 @@ class WecoAI:
         version_number: Optional[int],
         text_input: Optional[str],
         images_input: Optional[List[str]],
+        return_reasoning: Optional[bool]
     ) -> Union[Dict[str, Any], Coroutine[Any, Any, Dict[str, Any]]]:
         """Internal method to handle both synchronous and asynchronous query requests.
 
@@ -408,6 +413,8 @@ class WecoAI:
             The text input to the function.
         images_input : List[str], optional
             A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
+        return_reasoning : bool, optional
+            Whether to return reasoning for the output.
 
         Returns
         -------
@@ -434,7 +441,7 @@ class WecoAI:
 
         # Make the request
         endpoint = "query"
-        data = {"name": fn_name, "text": text_input, "images": image_urls, "version_number": version_number}
+        data = {"name": fn_name, "text": text_input, "images": image_urls, "version_number": version_number, "return_reasoning": return_reasoning}
         request = self._make_request(endpoint=endpoint, data=data, is_async=is_async)
 
         if is_async:
@@ -454,6 +461,7 @@ class WecoAI:
         version_number: Optional[int] = -1,
         text_input: Optional[str] = "",
         images_input: Optional[List[str]] = [],
+        return_reasoning: Optional[bool] = False
     ) -> Dict[str, Any]:
         """Asynchronously queries a function with the given function ID and input.
 
@@ -467,6 +475,8 @@ class WecoAI:
             The text input to the function.
         images_input : List[str], optional
             A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
+        return_reasoning : bool, optional
+            Whether to return reasoning for the output. Default is False.
 
         Returns
         -------
@@ -475,7 +485,7 @@ class WecoAI:
             and the latency in milliseconds.
         """
         return await self._query(
-            fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, is_async=True
+            fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, return_reasoning=return_reasoning, is_async=True
         )
 
     def query(
@@ -484,6 +494,7 @@ class WecoAI:
         version_number: Optional[int] = -1,
         text_input: Optional[str] = "",
         images_input: Optional[List[str]] = [],
+        return_reasoning: Optional[bool] = False
     ) -> Dict[str, Any]:
         """Synchronously queries a function with the given function ID and input.
 
@@ -497,6 +508,8 @@ class WecoAI:
             The text input to the function.
         images_input : List[str], optional
             A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
+        return_reasoning : bool, optional
+            Whether to return reasoning for the output. Default is False.
 
         Returns
         -------
@@ -505,11 +518,11 @@ class WecoAI:
             and the latency in milliseconds.
         """
         return self._query(
-            fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, is_async=False
+            fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, return_reasoning=return_reasoning, is_async=False
         )
 
     def batch_query(
-        self, fn_name: str, batch_inputs: List[Dict[str, Any]], version_number: Optional[int] = -1
+        self, fn_name: str, batch_inputs: List[Dict[str, Any]], version_number: Optional[int] = -1, return_reasoning: Optional[bool] = False
     ) -> List[Dict[str, Any]]:
         """Batch queries a function version with a list of inputs.
 
@@ -517,14 +530,14 @@ class WecoAI:
         ----------
         fn_name : str
             The name of the function or a list of function names to query.
-
         batch_inputs : List[Dict[str, Any]]
             A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g.,
             when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]}
             and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
-
         version_number : int, optional
             The version number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
+        return_reasoning : bool, optional
+            Whether to return reasoning for the output. Default is False.
 
         Returns
         -------
@@ -535,7 +548,7 @@ class WecoAI:
 
         async def run_queries():
             tasks = list(
-                map(lambda fn_input: self.aquery(fn_name=fn_name, version_number=version_number, **fn_input), batch_inputs)
+                map(lambda fn_input: self.aquery(fn_name=fn_name, version_number=version_number, return_reasoning=return_reasoning, **fn_input), batch_inputs)
             )
             return await asyncio.gather(*tasks)
 

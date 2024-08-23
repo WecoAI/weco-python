@@ -25,12 +25,16 @@ pip install weco
 ```
 
 ## Features
+- Synchronous & Asynchronous client.
+- Batch API
+- Multimodality (Language & Vision)
+- Interpretability (view the reasoning behind outputs)
+
+
+## What We Offer
 
 - The **build** function enables quick and easy prototyping of new functions via LLMs through just natural language. We encourage users to do this through our [web console](https://weco-app.vercel.app/function) for maximum control and ease of use, however, you can also do this through our API as shown in [here](examples/cookbook.ipynb).
 - The **query** function allows you to test and use the newly created function in your own code.
-- We offer asynchronous versions of the above clients.
-- We provide a **batch_query** functions that allows users to batch functions for various inputs as well as multiple inputs for the same function in a query. This is helpful to make a large number of queries more efficiently.
-- We also offer multimodality capabilities. You can now query our client with both **language** AND **vision** inputs!
 
 We provide both services in two ways:
 - `weco.WecoAI` client to be used when you want to maintain the same client service across a portion of code. This is better for dense service usage.

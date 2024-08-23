@@ -74,15 +74,12 @@ jobs:
         inputs: >-
           ./dist/*.tar.gz
           ./dist/*.whl
-    - name: Debug Print github.ref_name
-      run: >-
-        echo "github.ref_name: ${{ github.ref_name }}"
     - name: Create GitHub Release
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: >-
         gh release create
-        'v0.1.7'
+        'v0.1.8'
         --repo '${{ github.repository }}'
         --notes ""
     - name: Upload artifact signatures to GitHub Release
@@ -93,5 +90,5 @@ jobs:
       # sigstore-produced signatures and certificates.
       run: >-
         gh release upload
-        'v0.1.7' dist/**
+        'v0.1.8' dist/**
         --repo '${{ github.repository }}'

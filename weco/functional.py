@@ -52,6 +52,7 @@ def query(
     version_number: Optional[int] = -1,
     text_input: Optional[str] = "",
     images_input: Optional[List[str]] = [],
+    return_reasoning: Optional[bool] = False,
     api_key: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Queries a function synchronously with the given function ID and input.
@@ -66,6 +67,8 @@ def query(
         The text input to the function.
     images_input : List[str], optional
         A list of image URLs or base64 encoded images to be used as input to the function.
+    return_reasoning : bool, optional
+        A flag to indicate if the reasoning should be returned. Default is False.
     api_key : str
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
 
@@ -76,7 +79,7 @@ def query(
         and the latency in milliseconds.
     """
     client = WecoAI(api_key=api_key)
-    response = client.query(fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input)
+    response = client.query(fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, return_reasoning=return_reasoning)
     return response
 
 
@@ -85,6 +88,7 @@ async def aquery(
     version_number: Optional[int] = -1,
     text_input: Optional[str] = "",
     images_input: Optional[List[str]] = [],
+    return_reasoning: Optional[bool] = False,
     api_key: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Queries a function asynchronously with the given function ID and input.
@@ -99,6 +103,8 @@ async def aquery(
         The text input to the function.
     images_input : List[str], optional
         A list of image URLs to be used as input to the function.
+    return_reasoning : bool, optional
+        A flag to indicate if the reasoning should be returned. Default is False.
     api_key : str
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
 
@@ -110,13 +116,13 @@ async def aquery(
     """
     client = WecoAI(api_key=api_key)
     response = await client.aquery(
-        fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input
+        fn_name=fn_name, version_number=version_number, text_input=text_input, images_input=images_input, return_reasoning=return_reasoning
     )
     return response
 
 
 def batch_query(
-    fn_name: str, batch_inputs: List[Dict[str, Any]], version_number: Optional[int] = -1, api_key: Optional[str] = None
+    fn_name: str, batch_inputs: List[Dict[str, Any]], version_number: Optional[int] = -1, return_reasoning: Optional[bool] = False, api_key: Optional[str] = None
 ) -> List[Dict[str, Any]]:
     """Synchronously queries multiple functions using asynchronous calls internally.
 
@@ -129,15 +135,14 @@ def batch_query(
         The name of the function or a list of function names to query.
         Note that if a single function name is provided, it will be used for all queries.
         If a list of function names is provided, the length must match the number of queries.
-
     batch_inputs : List[str]
        A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g.,
        when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]}
        and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
-
     version_number : int, optional
         The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
-
+    return_reasoning : bool, optional
+        A flag to indicate if the reasoning should be returned. Default is False.
     api_key : str, optional
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
 
@@ -148,5 +153,5 @@ def batch_query(
         in the same order as the input queries.
     """
     client = WecoAI(api_key=api_key)
-    responses = client.batch_query(fn_name=fn_name, version_number=version_number, batch_inputs=batch_inputs)
+    responses = client.batch_query(fn_name=fn_name, version_number=version_number, batch_inputs=batch_inputs, return_reasoning=return_reasoning)
     return responses

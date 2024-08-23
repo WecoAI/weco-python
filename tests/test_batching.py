@@ -76,6 +76,7 @@ def test_batch_query_image(image_evaluator, image_inputs):
         assert isinstance(query_response["in_tokens"], int)
         assert isinstance(query_response["out_tokens"], int)
         assert isinstance(query_response["latency_ms"], float)
+        assert "reasoning_steps" not in query_response
 
         output = query_response["output"]
         assert set(output.keys()) == {"description", "objects"}

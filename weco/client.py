@@ -67,8 +67,7 @@ class WecoAI:
         self.api_key = api_key
         self.http2 = http2
         self.timeout = timeout
-        # self.base_url = "https://function.api.weco.ai"
-        self.base_url = "https://function-dev.api.weco.ai"
+        self.base_url = "https://function.api.weco.ai"
         # Setup clients
         self.client = httpx.Client(http2=http2, timeout=timeout)
         self.async_client = httpx.AsyncClient(http2=http2, timeout=timeout)

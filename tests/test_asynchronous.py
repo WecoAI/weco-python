@@ -35,7 +35,7 @@ async def text_evaluator():
 @pytest.mark.asyncio
 async def test_text_aquery(text_evaluator):
     fn_name, version_number, _ = await text_evaluator
-    query_response = await aquery(fn_name=fn_name, version_number=version_number, text_input="I love this product!")
+    query_response = await aquery(fn_name=fn_name, version=-1, version_number=version_number, text_input="I love this product!")
 
     await assert_query_response(query_response)
     assert set(query_response["output"].keys()) == {"sentiment", "explanation"}
@@ -55,6 +55,7 @@ async def test_image_aquery(image_evaluator):
     fn_name, version_number, _ = await image_evaluator
     query_response = await aquery(
         fn_name=fn_name,
+        version=-1,
         version_number=version_number,
         images_input=[
             "https://www.integratedtreatmentservices.co.uk/wp-content/uploads/2013/12/Objects-of-Reference.jpg",
@@ -80,6 +81,7 @@ async def test_text_and_image_aquery(text_and_image_evaluator):
     fn_name, version_number, _ = await text_and_image_evaluator
     query_response = await aquery(
         fn_name=fn_name,
+        version=-1,
         version_number=version_number,
         text_input="Find x and y.",
         images_input=[

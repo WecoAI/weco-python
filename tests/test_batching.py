@@ -49,7 +49,7 @@ def test_batch_query_text(ml_task_evaluator, ml_task_inputs):
     fn_name, version_number = ml_task_evaluator
     batch_inputs = ml_task_inputs
 
-    query_responses = batch_query(fn_name=fn_name, version_number=version_number, batch_inputs=batch_inputs)
+    query_responses = batch_query(fn_name=fn_name, version=-1, version_number=version_number, batch_inputs=batch_inputs)
 
     assert len(query_responses) == len(batch_inputs)
 
@@ -67,7 +67,7 @@ def test_batch_query_image(image_evaluator, image_inputs):
     fn_name, version_number = image_evaluator
     batch_inputs = image_inputs
 
-    query_responses = batch_query(fn_name=fn_name, version_number=version_number, batch_inputs=batch_inputs)
+    query_responses = batch_query(fn_name=fn_name, version=-1, version_number=version_number, batch_inputs=batch_inputs)
 
     assert len(query_responses) == len(batch_inputs)
 

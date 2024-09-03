@@ -26,7 +26,7 @@ def text_reasoning_evaluator():
 def test_text_reasoning_query(text_reasoning_evaluator):
     fn_name, version_number, _ = text_reasoning_evaluator
     query_response = query(
-        fn_name=fn_name, version_number=version_number, text_input="I love this product!", return_reasoning=True
+        fn_name=fn_name, version=-1, version_number=version_number, text_input="I love this product!", return_reasoning=True
     )
 
     assert_query_response(query_response)
@@ -46,6 +46,7 @@ def test_vision_reasoning_query(vision_reasoning_evaluator):
     fn_name, version_number, _ = vision_reasoning_evaluator
     query_response = query(
         fn_name=fn_name,
+        version=-1,
         version_number=version_number,
         text_input="Find x and y.",
         images_input=[

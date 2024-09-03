@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from .client import WecoAI
 
@@ -49,6 +49,7 @@ async def abuild(task_description: str, multimodal: bool = False, api_key: str =
 
 def query(
     fn_name: str,
+    version: Optional[Union[str, int]] = -1,
     version_number: Optional[int] = -1,
     text_input: Optional[str] = "",
     images_input: Optional[List[str]] = [],
@@ -61,6 +62,8 @@ def query(
     ----------
     fn_name : str
         The name of the function to query.
+    version : str | int, optional
+        The version alias or number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
     version_number : int, optional
         The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
     text_input : str, optional
@@ -81,6 +84,7 @@ def query(
     client = WecoAI(api_key=api_key)
     response = client.query(
         fn_name=fn_name,
+        version=version,
         version_number=version_number,
         text_input=text_input,
         images_input=images_input,
@@ -91,6 +95,7 @@ def query(
 
 async def aquery(
     fn_name: str,
+    version: Optional[Union[str, int]] = -1,
     version_number: Optional[int] = -1,
     text_input: Optional[str] = "",
     images_input: Optional[List[str]] = [],
@@ -103,6 +108,8 @@ async def aquery(
     ----------
     fn_name : str
         The name of the function to query.
+    version: str | int, optional
+        The version number or alias of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
     version_number : int, optional
         The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
     text_input : str, optional
@@ -123,6 +130,7 @@ async def aquery(
     client = WecoAI(api_key=api_key)
     response = await client.aquery(
         fn_name=fn_name,
+        version=version,
         version_number=version_number,
         text_input=text_input,
         images_input=images_input,
@@ -134,6 +142,7 @@ async def aquery(
 def batch_query(
     fn_name: str,
     batch_inputs: List[Dict[str, Any]],
+    version: Optional[Union[str, int]] = -1,
     version_number: Optional[int] = -1,
     return_reasoning: Optional[bool] = False,
     api_key: Optional[str] = None,
@@ -153,6 +162,8 @@ def batch_query(
        A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g.,
        when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]}
        and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
+    version : str | int, optional
+        The version number or alias of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
     version_number : int, optional
         The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
     return_reasoning : bool, optional
@@ -168,6 +179,6 @@ def batch_query(
     """
     client = WecoAI(api_key=api_key)
     responses = client.batch_query(
-        fn_name=fn_name, version_number=version_number, batch_inputs=batch_inputs, return_reasoning=return_reasoning
+        fn_name=fn_name, version=version, version_number=version_number, batch_inputs=batch_inputs, return_reasoning=return_reasoning
     )
     return responses

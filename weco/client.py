@@ -388,7 +388,8 @@ class WecoAI:
         self,
         is_async: bool,
         fn_name: str,
-        version_number: Optional[int],
+        version: Union[str, int],
+        version_number: int,
         text_input: Optional[str],
         images_input: Optional[List[str]],
         return_reasoning: Optional[bool],
@@ -401,6 +402,8 @@ class WecoAI:
             Whether to perform an asynchronous request.
         fn_name : str
             The name of the function to query.
+        version : Union[str, int]
+            The version alias or number of the function to query. 
         version_number : int, optional
             The version number of the function to query.
         text_input : str, optional
@@ -436,9 +439,10 @@ class WecoAI:
         endpoint = "query"
         data = {
             "name": fn_name,
+            "version": version,
+            "version_number": version_number,
             "text": text_input,
             "images": image_urls,
-            "version_number": version_number,
             "return_reasoning": return_reasoning,
         }
         request = self._make_request(endpoint=endpoint, data=data, is_async=is_async)
@@ -457,6 +461,7 @@ class WecoAI:
     async def aquery(
         self,
         fn_name: str,
+        version: Optional[Union[str, int]] = -1,
         version_number: Optional[int] = -1,
         text_input: Optional[str] = "",
         images_input: Optional[List[str]] = [],
@@ -468,6 +473,8 @@ class WecoAI:
         ----------
         fn_name : str
             The name of the function to query.
+        version : Union[str, int], optional
+            The version alias or number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
         version_number : int, optional
             The version number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
         text_input : str, optional
@@ -485,6 +492,7 @@ class WecoAI:
         """
         return await self._query(
             fn_name=fn_name,
+            version=version,
             version_number=version_number,
             text_input=text_input,
             images_input=images_input,
@@ -495,6 +503,7 @@ class WecoAI:
     def query(
         self,
         fn_name: str,
+        version: Optional[Union[str, int]] = -1,
         version_number: Optional[int] = -1,
         text_input: Optional[str] = "",
         images_input: Optional[List[str]] = [],
@@ -523,6 +532,7 @@ class WecoAI:
         """
         return self._query(
             fn_name=fn_name,
+            version=version,
             version_number=version_number,
             text_input=text_input,
             images_input=images_input,
@@ -534,6 +544,7 @@ class WecoAI:
         self,
         fn_name: str,
         batch_inputs: List[Dict[str, Any]],
+        version: Optional[Union[str, int]] = -1,
         version_number: Optional[int] = -1,
         return_reasoning: Optional[bool] = False,
     ) -> List[Dict[str, Any]]:
@@ -547,6 +558,8 @@ class WecoAI:
             A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g.,
             when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]}
             and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
+        version : Union[str, int], optional
+            The version alias or number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
         version_number : int, optional
             The version number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
         return_reasoning : bool, optional
@@ -563,7 +576,7 @@ class WecoAI:
             tasks = list(
                 map(
                     lambda fn_input: self.aquery(
-                        fn_name=fn_name, version_number=version_number, return_reasoning=return_reasoning, **fn_input
+                        fn_name=fn_name, version=version, version_number=version_number, return_reasoning=return_reasoning, **fn_input
                     ),
                     batch_inputs,
                 )

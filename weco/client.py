@@ -403,7 +403,7 @@ class WecoAI:
         fn_name : str
             The name of the function to query.
         version : Union[str, int]
-            The version alias or number of the function to query. 
+            The version alias or number of the function to query.
         version_number : int, optional
             The version number of the function to query.
         text_input : str, optional
@@ -576,7 +576,11 @@ class WecoAI:
             tasks = list(
                 map(
                     lambda fn_input: self.aquery(
-                        fn_name=fn_name, version=version, version_number=version_number, return_reasoning=return_reasoning, **fn_input
+                        fn_name=fn_name,
+                        version=version,
+                        version_number=version_number,
+                        return_reasoning=return_reasoning,
+                        **fn_input,
                     ),
                     batch_inputs,
                 )

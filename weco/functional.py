@@ -179,6 +179,10 @@ def batch_query(
     """
     client = WecoAI(api_key=api_key)
     responses = client.batch_query(
-        fn_name=fn_name, version=version, version_number=version_number, batch_inputs=batch_inputs, return_reasoning=return_reasoning
+        fn_name=fn_name,
+        version=version,
+        version_number=version_number,
+        batch_inputs=batch_inputs,
+        return_reasoning=return_reasoning,
     )
     return responses

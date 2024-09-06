@@ -35,7 +35,9 @@ async def text_evaluator():
 @pytest.mark.asyncio
 async def test_text_aquery(text_evaluator):
     fn_name, version_number, _ = await text_evaluator
-    query_response = await aquery(fn_name=fn_name, version=-1, version_number=version_number, text_input="I love this product!")
+    query_response = await aquery(
+        fn_name=fn_name, version=-1, version_number=version_number, text_input="I love this product!"
+    )
 
     await assert_query_response(query_response)
     assert set(query_response["output"].keys()) == {"sentiment", "explanation"}

@@ -3,44 +3,48 @@ from typing import Any, Dict, List, Optional, Union
 from .client import WecoAI
 
 
-def build(task_description: str, multimodal: bool = False, api_key: str = None) -> tuple[str, int, str]:
-    """Builds a specialized function synchronously given a task description.
+def build(task_description: str, multimodal: bool = False, api_key: Optional[str] = None) -> tuple[str, int, str]:
+    """Build a specialized function for a task.
 
     Parameters
     ----------
     task_description : str
-        A description of the task for which the function is being built.
+        The description of the task for which the function is being built.
+
     multimodal : bool, optional
         A flag to indicate if the function should be multimodal. Default is False.
-    api_key : str
-        The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
+
+    api_key : str, optional
+        The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - `WECO_API_KEY`.
 
     Returns
     -------
-    tuple[str, str]
-        A tuple containing the name and description of the function.
+    tuple[str, int, str]
+        A tuple containing the function name, version number and description.
     """
     client = WecoAI(api_key=api_key)
     response = client.build(task_description=task_description, multimodal=multimodal)
     return response
 
 
-async def abuild(task_description: str, multimodal: bool = False, api_key: str = None) -> tuple[str, int, str]:
-    """Builds a specialized function asynchronously given a task description.
+async def abuild(task_description: str, multimodal: bool = False, api_key: Optional[str] = None) -> tuple[str, int, str]:
+    """Build a specialized function for a task asynchronously.
 
     Parameters
     ----------
     task_description : str
-        A description of the task for which the function is being built.
+        The description of the task for which the function is being built.
+
     multimodal : bool, optional
         A flag to indicate if the function should be multimodal. Default is False.
-    api_key : str
-        The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
+
+    api_key : str, optional
+        The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - `WECO_API_KEY`.
 
     Returns
     -------
-    tuple[str, str]
-        A tuple containing the name, version number and description of the function.
+    tuple[str, int, str]
+        A tuple containing the function name, version number and description.
     """
     client = WecoAI(api_key=api_key)
     response = await client.abuild(task_description=task_description, multimodal=multimodal)
@@ -56,24 +60,31 @@ def query(
     return_reasoning: Optional[bool] = False,
     api_key: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Queries a function synchronously with the given function ID and input.
+    """Queries a specific function with the input (text, images or both).
 
     Parameters
     ----------
     fn_name : str
         The name of the function to query.
+
     version : str | int, optional
-        The version alias or number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
+        The version alias/number of the function to query. Default is -1 which results in the latest version being used.
+
     version_number : int, optional
-        The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
+        The version number of the function to query. Default is -1 which results in the latest version being used.
+
     text_input : str, optional
         The text input to the function.
+
     images_input : List[str], optional
         A list of image URLs or base64 encoded images to be used as input to the function.
+
     return_reasoning : bool, optional
         A flag to indicate if the reasoning should be returned. Default is False.
-    api_key : str
-        The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
+
+    api_key : str, optional
+        The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - `WECO_API_KEY`.
+
 
     Returns
     -------
@@ -102,30 +113,35 @@ async def aquery(
     return_reasoning: Optional[bool] = False,
     api_key: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Queries a function asynchronously with the given function ID and input.
+    """Queries a specific function with the input (text, images or both) asynchronously.
 
     Parameters
     ----------
     fn_name : str
         The name of the function to query.
+
     version: str | int, optional
-        The version number or alias of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
+        The version alias/number of the function to query. Default is -1 which results in the latest version being used.
+
     version_number : int, optional
-        The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
+        The version number of the function to query. Default is -1 which results in the latest version being used.
+
     text_input : str, optional
         The text input to the function.
+
     images_input : List[str], optional
-        A list of image URLs to be used as input to the function.
+        A list of image URLs or base64 encoded images to be used as input to
+
     return_reasoning : bool, optional
         A flag to indicate if the reasoning should be returned. Default is False.
+
     api_key : str
-        The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
+        The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - `WECO_API_KEY`.
 
     Returns
     -------
     dict
         A dictionary containing the output of the function, the number of input tokens, the number of output tokens,
-        and the latency in milliseconds.
     """
     client = WecoAI(api_key=api_key)
     response = await client.aquery(
@@ -147,35 +163,42 @@ def batch_query(
     return_reasoning: Optional[bool] = False,
     api_key: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
-    """Synchronously queries multiple functions using asynchronous calls internally.
+    """Batch queries a single function with multiple inputs.
 
-    This method uses the asynchronous queries to submit all queries concurrently
+    This method uses the asynchronous queries to submit a batch of queries concurrently
     and waits for all responses to be received before returning the results.
+    Order of the responses corresponds to the order of the inputs.
 
     Parameters
     ----------
-    fn_name : str | List[str]
-        The name of the function or a list of function names to query.
-        Note that if a single function name is provided, it will be used for all queries.
-        If a list of function names is provided, the length must match the number of queries.
-    batch_inputs : List[str]
-       A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g.,
-       when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]}
-       and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
+    fn_name : str
+        The name of the function to query.
+
+    batch_inputs : List[Dict[str, Any]]
+        A list of dictionaries, each representing an input for the function. Each dictionary can contain:
+        - "text_input": A string for text input.
+        - "images_input": A list of image URLs or base64 encoded images.
+
     version : str | int, optional
-        The version number or alias of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
+        The version alias/number of the function to query. Default is -1 which results in the latest version being used.
+
     version_number : int, optional
         The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
+
     return_reasoning : bool, optional
         A flag to indicate if the reasoning should be returned. Default is False.
+
     api_key : str, optional
-        The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - WECO_API_KEY.
+        The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - `WECO_API_KEY`.
 
     Returns
     -------
     List[Dict[str, Any]]
-        A list of dictionaries, each containing the output of a function query,
-        in the same order as the input queries.
+        A list of dictionaries, each containing the result of a function query. Each dictionary includes:
+        - The function's output.
+        - The number of input tokens.
+        - The number of output tokens.
+        - The latency in milliseconds.
     """
     client = WecoAI(api_key=api_key)
     responses = client.batch_query(

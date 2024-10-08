@@ -12,7 +12,6 @@ from PIL import Image
 
 from .constants import MAX_IMAGE_SIZE_MB, MAX_IMAGE_UPLOADS, MAX_TEXT_LENGTH, SUPPORTED_IMAGE_EXTENSIONS
 from .utils import (
-    generate_random_base16_code,
     get_image_size,
     is_base64_image,
     is_local_image,
@@ -22,41 +21,31 @@ from .utils import (
 
 
 class WecoAI:
-    """A client for the WecoAI function builder API that allows users to build and query specialized functions built by LLMs.
+    """A client for the WecoAI function builder API that allows users to build and query specialized functions for GenAI tasks and features.
     The user must simply provide a task description to build a function, and then query the function with an input to get the result they need.
     Our client supports both synchronous and asynchronous request paradigms and uses HTTP/2 for faster communication with the API.
-    Support for multimodality is included.
-
-    Attributes
-    ----------
-    api_key : str
-        The API key used for authentication.
-
-    timeout : float
-        The timeout for the HTTP requests in seconds. Default is 120.0.
-
-    http2 : bool
-        Whether to use HTTP/2 protocol for the HTTP requests. Default is True.
+    Support for structured outputs, multimodality, grounding through web search and reasoning is included. For maximum control/flexibility,
+    we recommend that users build functions on the WecoAI platform to leverage the full power of the API, then deploy it in production using this client.
     """
 
-    def __init__(self, api_key: Union[str, None] = None, timeout: float = 120.0, http2: bool = True) -> None:
-        """Initializes the WecoAI client with the provided API key and base URL.
+    def __init__(self, api_key: Union[str, None] = None, timeout: Optional[float] = 120.0, http2: Optional[bool] = True) -> None:
+        """Initializes the WecoAI client.
 
         Parameters
         ----------
         api_key : str, optional
-            The API key used for authentication. If not provided, the client will attempt to read it from the environment variable - WECO_API_KEY.
+            The API key used for authentication. If not provided, the client will attempt to read it from the environment variable - `WECO_API_KEY`.
 
         timeout : float, optional
-            The timeout for the HTTP requests in seconds (default is 120.0).
+            The timeout for the HTTP requests in seconds. Default is 120.
 
         http2 : bool, optional
-            Whether to use HTTP/2 protocol for the HTTP requests (default is True).
+            Whether to use HTTP/2 protocol for the HTTP requests. Default is True.
 
         Raises
         ------
         ValueError
-            If the API key is not provided to the client, is not set as an environment variable or is not a string.
+            If the API key is not provided to the client, is not set as an environment variable (`WECO_API_KEY`) or is not a string.
         """
         # Manage the API key
         if api_key is None or not isinstance(api_key, str):
@@ -80,22 +69,35 @@ class WecoAI:
             "Content-Type": "application/json",
         }
 
-    def _make_request(self, endpoint: str, data: Dict[str, Any], is_async: bool = False) -> Callable:
+    def _make_request(self, endpoint: str, data: Dict[str, Any], is_async: Optional[bool] = False) -> Callable:
         """Creates a callable for making either synchronous or asynchronous requests.
 
         Parameters
         ----------
         endpoint : str
             The API endpoint to which the request will be made.
+
         data : dict
             The data to be sent in the request body.
+
         is_async : bool, optional
-            Whether to create an asynchronous request (default is False).
+            Whether to create an asynchronous request. Default is False.
 
         Returns
         -------
         Callable
             A callable that performs the HTTP request.
+
+        Raises
+        ------
+        ValueError
+            If an error occurs during the request.
+
+        HTTPStatusError
+            If an HTTP error occurs during the request.
+
+        Exception
+            If an unexpected error occurs during the request.
         """
         url = f"{self.base_url}/{endpoint}"
         headers = self._headers()
@@ -144,12 +146,12 @@ class WecoAI:
         Returns
         -------
         dict
-            A processed dictionary containing the output, token counts, and latency.
+            A processed dictionary containing the output, io token counts, and latency.
 
         Raises
         ------
         UserWarning
-            If there are any warnings in the API response.
+            If there are warnings in the response.
         """
         for _warning in response.get("warnings", []):
             warnings.warn(_warning)
@@ -172,7 +174,7 @@ class WecoAI:
         Parameters
         ----------
         task_description : str
-            A description of the task for which the function is being built.
+            The description of the task for which the function is being built.
 
         multimodal : bool
             Whether the function is multimodal or not.
@@ -211,38 +213,38 @@ class WecoAI:
             response = request  # the request has already been made and the response is available
             return response["function_name"], 0, response["description"]
 
-    async def abuild(self, task_description: str, multimodal: bool = False) -> Tuple[str, int, str]:
-        """Asynchronously builds a specialized function given a task description.
+    async def abuild(self, task_description: str, multimodal: Optional[bool] = False) -> Tuple[str, int, str]:
+        """Build a specialized function for a task.
 
         Parameters
         ----------
         task_description : str
-            A description of the task for which the function is being built.
+            The description of the task for which the function is being built.
 
         multimodal : bool, optional
             Whether the function is multimodal or not (default is False).
 
         Returns
         -------
-        tuple[str, str]
+        tuple[str, int, str]
             A tuple containing the name, version number and description of the function.
         """
         return await self._build(task_description=task_description, multimodal=multimodal, is_async=True)
 
-    def build(self, task_description: str, multimodal: bool = False) -> Tuple[str, int, str]:
-        """Synchronously builds a specialized function given a task description.
+    def build(self, task_description: str, multimodal: Optional[bool] = False) -> Tuple[str, int, str]:
+        """Build a specialized function for a task.
 
         Parameters
         ----------
         task_description : str
-            A description of the task for which the function is being built.
+            The description of the task for which the function is being built.
 
         multimodal : bool, optional
-            Whether the function is multimodal or not (default is False).
+            Whether the function is multimodal or not. Default is False.
 
         Returns
         -------
-        tuple[str, str]
+        tuple[str, int, str]
             A tuple containing the name, version number and description of the function.
         """
         return self._build(task_description=task_description, multimodal=multimodal, is_async=False)
@@ -309,6 +311,7 @@ class WecoAI:
         ----------
         text_input : str
             The text input to the function.
+
         images_input : List[str]
             A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
 
@@ -327,10 +330,6 @@ class WecoAI:
         for image in images_input:
             if not isinstance(image, str):
                 raise ValueError("Images input must be a list of strings.")
-
-        # Assert that either text or images or both must be provded
-        if len(text_input) == 0 and len(images_input) == 0:
-            raise ValueError("Either text or images or both must be provided as input.")
 
         # Check if the text input is within the limit
         if len(text_input) > MAX_TEXT_LENGTH:
@@ -390,9 +389,9 @@ class WecoAI:
         fn_name: str,
         version: Union[str, int],
         version_number: int,
-        text_input: Optional[str],
-        images_input: Optional[List[str]],
-        return_reasoning: Optional[bool],
+        text_input: str,
+        images_input: List[str],
+        return_reasoning: bool,
     ) -> Union[Dict[str, Any], Coroutine[Any, Any, Dict[str, Any]]]:
         """Internal method to handle both synchronous and asynchronous query requests.
 
@@ -400,17 +399,23 @@ class WecoAI:
         ----------
         is_async : bool
             Whether to perform an asynchronous request.
+
         fn_name : str
             The name of the function to query.
+
         version : Union[str, int]
-            The version alias or number of the function to query.
-        version_number : int, optional
+            The version alias/number of the function to query.
+
+        version_number : int
             The version number of the function to query.
-        text_input : str, optional
+
+        text_input : str
             The text input to the function.
-        images_input : List[str], optional
+
+        images_input : List[str]
             A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
-        return_reasoning : bool, optional
+
+        return_reasoning : bool
             Whether to return reasoning for the output.
 
         Returns
@@ -467,22 +472,27 @@ class WecoAI:
         images_input: Optional[List[str]] = [],
         return_reasoning: Optional[bool] = False,
     ) -> Dict[str, Any]:
-        """Asynchronously queries a function with the given function ID and input.
+        """Queries a specific function with the input (text, images or both) asynchronously.
 
         Parameters
         ----------
         fn_name : str
             The name of the function to query.
-        version : Union[str, int], optional
-            The version alias or number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
+
+        version: str | int, optional
+            The version alias/number of the function to query. Default is -1 which results in the latest version being used.
+
         version_number : int, optional
-            The version number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
+            The version number of the function to query. Default is -1 which results in the latest version being used.
+
         text_input : str, optional
             The text input to the function.
+
         images_input : List[str], optional
-            A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
+            A list of image URLs or base64 encoded images to be used as input to
+
         return_reasoning : bool, optional
-            Whether to return reasoning for the output. Default is False.
+            A flag to indicate if the reasoning should be returned. Default is False.
 
         Returns
         -------
@@ -509,20 +519,27 @@ class WecoAI:
         images_input: Optional[List[str]] = [],
         return_reasoning: Optional[bool] = False,
     ) -> Dict[str, Any]:
-        """Synchronously queries a function with the given function ID and input.
+        """Queries a specific function with the input (text, images or both).
 
         Parameters
         ----------
         fn_name : str
             The name of the function to query.
+
+        version : str | int, optional
+            The version alias/number of the function to query. Default is -1 which results in the latest version being used.
+
         version_number : int, optional
-            The version number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
+            The version number of the function to query. Default is -1 which results in the latest version being used.
+
         text_input : str, optional
             The text input to the function.
+
         images_input : List[str], optional
-            A list of image URLs or images encoded in base64 with their metadata to be sent as input to the function.
+            A list of image URLs or base64 encoded images to be used as input to the function.
+
         return_reasoning : bool, optional
-            Whether to return reasoning for the output. Default is False.
+            A flag to indicate if the reasoning should be returned. Default is False.
 
         Returns
         -------
@@ -548,28 +565,41 @@ class WecoAI:
         version_number: Optional[int] = -1,
         return_reasoning: Optional[bool] = False,
     ) -> List[Dict[str, Any]]:
-        """Batch queries a function version with a list of inputs.
+        """Performs batch queries on a specified function version.
+
+        This method processes multiple inputs concurrently using asynchronous queries,
+        ensuring that results are returned in the same order as the inputs.
 
         Parameters
         ----------
         fn_name : str
-            The name of the function or a list of function names to query.
+            The name of the function to query.
+
         batch_inputs : List[Dict[str, Any]]
-            A list of inputs for the functions to query. The input must be a dictionary containing the data to be processed. e.g.,
-            when providing for a text input, the dictionary should be {"text_input": "input text"}, for an image input, the dictionary should be {"images_input": ["url1", "url2", ...]}
-            and for a combination of text and image inputs, the dictionary should be {"text_input": "input text", "images_input": ["url1", "url2", ...]}.
+            A list of input dictionaries for the function. Each dictionary can include:
+            - "text_input": A string for text input.
+            - "images_input": A list of image URLs or base64 encoded images.
+
         version : Union[str, int], optional
-            The version alias or number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
+            The version alias or number of the function to query. Defaults to -1 for the latest version.
+
         version_number : int, optional
-            The version number of the function to query. If not provided, the latest version will be used. Pass -1 to use the latest version.
+            The specific version number of the function to query. Defaults to -1 for the latest version.
+
         return_reasoning : bool, optional
-            Whether to return reasoning for the output. Default is False.
+            If True, includes reasoning in the response. Defaults to False.
+
+        api_key : str, optional
+            The API key for the WecoAI service. If not provided, it must be set in the environment variable `WECO_API_KEY`.
 
         Returns
         -------
         List[Dict[str, Any]]
-            A list of dictionaries, each containing the output of a function query,
-            in the same order as the input queries.
+            A list of dictionaries, each containing the result of a function query, including:
+            - The function's output.
+            - The number of input tokens.
+            - The number of output tokens.
+            - The latency in milliseconds.
         """
 
         async def run_queries():

@@ -4,7 +4,7 @@
 
 ## Getting Started
 
-`weco` is a client facing API for interacting with the [WeCo AI](https://www.weco.ai/) function builder [service](https://weco-app.vercel.app/function). Use this API to build *complex* systems *fast*!
+`weco` is a client facing API for interacting with the [Weco AI](https://www.weco.ai/) function builder [service](https://weco-app.vercel.app/function). Use this API to build *complex* systems *fast*!
 
 Here are a few features our users often ask about. Feel free to follow along:
 

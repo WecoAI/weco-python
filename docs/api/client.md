@@ -1,1 +1,1 @@
-:::weco.client.WecoAI
+:::weco.client

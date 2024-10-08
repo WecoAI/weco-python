@@ -74,6 +74,9 @@ plugins:
         python:
           paths: [weco]
           options:
+            docstring_style: numpy
+            separate_signature: true
+            show_signature_annotations: false
             show_source: false
             heading_level: 2
 

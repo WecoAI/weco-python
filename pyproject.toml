@@ -6,11 +6,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "weco"
 authors = [
-    {name = "WeCo AI Team", email = "dhruv@weco.ai"},
+    {name = "Weco AI Team", email = "dhruv@weco.ai"},
 ]
-description = "A client facing API for interacting with the WeCo AI function builder service."
+description = "A client facing API for interacting with the Weco AI function builder service."
 readme = "README.md"
-version = "0.1.10"
+version = "0.1.11"
 license = {text = "MIT"}
 requires-python = ">=3.8"
 dependencies = ["asyncio", "httpx[http2]", "pillow"]
@@ -26,6 +26,7 @@ Homepage = "https://github.com/WecoAI/weco-python"
 
 [project.optional-dependencies]
 dev = ["flake8", "flake8-pyproject", "black", "isort", "pytest-asyncio", "pytest-xdist", "build", "setuptools_scm"]
+docs = ["mkdocs", "mkdocs-material", "mkdocs-material-extensions", "mkdocstrings[crystal,python]", "mkdocs-minify-plugin"]
 
 [tool.setuptools]
 packages = ["weco"]

@@ -56,7 +56,7 @@ theme:
   icon:
     repo: fontawesome/brands/github
     logo: custom/weco
-  favicon: custom/weco
+  favicon: assets/weco.svg
   include_homepage_in_sidebar: true
   highlightjs: true
   hijs_languages:

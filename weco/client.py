@@ -589,9 +589,6 @@ class WecoAI:
         return_reasoning : bool, optional
             If True, includes reasoning in the response. Defaults to False.
 
-        api_key : str, optional
-            The API key for the WecoAI service. If not provided, it must be set in the environment variable `WECO_API_KEY`.
-
         Returns
         -------
         List[Dict[str, Any]]

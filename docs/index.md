@@ -1,4 +1,5 @@
 <div align="center" style="display: flex; align-items: center; justify-content: center;">
+  <img src="assets/weco.svg" alt="Weco AI" style="height: 50px; margin-right: 10px;">
   <a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=Georgia&size=32&duration=4000&pause=400&color=808080&vCenter=true&multiline=false&width=200&height=50&lines=Weco+Client" alt="Typing SVG" /></a>
 </div>
 

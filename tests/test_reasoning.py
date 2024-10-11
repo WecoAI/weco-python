@@ -18,7 +18,6 @@ def assert_query_response(query_response):
 def text_reasoning_evaluator():
     fn_name, version_number, fn_desc = build(
         task_description="Evaluate the sentiment of the given text. Provide a json object with 'sentiment' and 'explanation' keys.",
-        multimodal=False,
     )
     return fn_name, version_number, fn_desc
 
@@ -26,7 +25,7 @@ def text_reasoning_evaluator():
 def test_text_reasoning_query(text_reasoning_evaluator):
     fn_name, version_number, _ = text_reasoning_evaluator
     query_response = query(
-        fn_name=fn_name, version=-1, version_number=version_number, text_input="I love this product!", return_reasoning=True
+        fn_name=fn_name, version=version_number, text_input="I love this product!", return_reasoning=True, strict=True
     )
 
     assert_query_response(query_response)
@@ -37,7 +36,6 @@ def test_text_reasoning_query(text_reasoning_evaluator):
 def vision_reasoning_evaluator():
     fn_name, version_number, fn_desc = build(
         task_description="Evaluate, solve and arrive at a numerical answer for the image provided. Perform any additional things if instructed. Provide a json object with 'answer' and 'explanation' keys.",
-        multimodal=True,
     )
     return fn_name, version_number, fn_desc
 
@@ -46,13 +44,13 @@ def test_vision_reasoning_query(vision_reasoning_evaluator):
     fn_name, version_number, _ = vision_reasoning_evaluator
     query_response = query(
         fn_name=fn_name,
-        version=-1,
-        version_number=version_number,
+        version=version_number,
         text_input="Find x and y.",
         images_input=[
             "https://i.ytimg.com/vi/cblHUeq3bkE/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLAKn3piY91QRCBzRgnzAPf7MPrjDQ"
         ],
         return_reasoning=True,
+        strict=True,
     )
 
     assert_query_response(query_response)

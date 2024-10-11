@@ -167,7 +167,7 @@ class WecoAI:
         return returned_response
 
     def _build(
-        self, task_description: str, multimodal: bool, is_async: bool
+        self, task_description: str, is_async: bool
     ) -> Union[Tuple[str, int, str], Coroutine[Any, Any, Tuple[str, int, str]]]:
         """Internal method to handle both synchronous and asynchronous build requests.
 
@@ -175,9 +175,6 @@ class WecoAI:
         ----------
         task_description : str
             The description of the task for which the function is being built.
-
-        multimodal : bool
-            Whether the function is multimodal or not.
 
         is_async : bool
             Whether to perform an asynchronous request.
@@ -199,7 +196,7 @@ class WecoAI:
             raise ValueError(f"Task description must be less than {MAX_TEXT_LENGTH} characters.")
 
         endpoint = "build"
-        data = {"request": task_description, "multimodal": multimodal}
+        data = {"request": task_description}
         request = self._make_request(endpoint=endpoint, data=data, is_async=is_async)
 
         if is_async:
@@ -213,7 +210,7 @@ class WecoAI:
             response = request  # the request has already been made and the response is available
             return response["function_name"], 0, response["description"]
 
-    async def abuild(self, task_description: str, multimodal: Optional[bool] = False) -> Tuple[str, int, str]:
+    async def abuild(self, task_description: str) -> Tuple[str, int, str]:
         """Build a specialized function for a task.
 
         Parameters
@@ -221,17 +218,14 @@ class WecoAI:
         task_description : str
             The description of the task for which the function is being built.
 
-        multimodal : bool, optional
-            Whether the function is multimodal or not (default is False).
-
         Returns
         -------
         tuple[str, int, str]
             A tuple containing the name, version number and description of the function.
         """
-        return await self._build(task_description=task_description, multimodal=multimodal, is_async=True)
+        return await self._build(task_description=task_description, is_async=True)
 
-    def build(self, task_description: str, multimodal: Optional[bool] = False) -> Tuple[str, int, str]:
+    def build(self, task_description: str) -> Tuple[str, int, str]:
         """Build a specialized function for a task.
 
         Parameters
@@ -239,15 +233,12 @@ class WecoAI:
         task_description : str
             The description of the task for which the function is being built.
 
-        multimodal : bool, optional
-            Whether the function is multimodal or not. Default is False.
-
         Returns
         -------
         tuple[str, int, str]
             A tuple containing the name, version number and description of the function.
         """
-        return self._build(task_description=task_description, multimodal=multimodal, is_async=False)
+        return self._build(task_description=task_description, is_async=False)
 
     def _upload_image(self, image_info: Dict[str, Any]) -> str:
         """
@@ -388,10 +379,10 @@ class WecoAI:
         is_async: bool,
         fn_name: str,
         version: Union[str, int],
-        version_number: int,
         text_input: str,
         images_input: List[str],
         return_reasoning: bool,
+        strict: bool,
     ) -> Union[Dict[str, Any], Coroutine[Any, Any, Dict[str, Any]]]:
         """Internal method to handle both synchronous and asynchronous query requests.
 
@@ -406,9 +397,6 @@ class WecoAI:
         version : Union[str, int]
             The version alias/number of the function to query.
 
-        version_number : int
-            The version number of the function to query.
-
         text_input : str
             The text input to the function.
 
@@ -417,6 +405,9 @@ class WecoAI:
 
         return_reasoning : bool
             Whether to return reasoning for the output.
+        
+        strict : bool
+            Whether to perform strict validation of the input.
 
         Returns
         -------
@@ -445,10 +436,10 @@ class WecoAI:
         data = {
             "name": fn_name,
             "version": version,
-            "version_number": version_number,
             "text": text_input,
             "images": image_urls,
             "return_reasoning": return_reasoning,
+            "strict": strict,
         }
         request = self._make_request(endpoint=endpoint, data=data, is_async=is_async)
 
@@ -467,10 +458,10 @@ class WecoAI:
         self,
         fn_name: str,
         version: Optional[Union[str, int]] = -1,
-        version_number: Optional[int] = -1,
         text_input: Optional[str] = "",
         images_input: Optional[List[str]] = [],
         return_reasoning: Optional[bool] = False,
+        strict: Optional[bool] = False,
     ) -> Dict[str, Any]:
         """Queries a specific function with the input (text, images or both) asynchronously.
 
@@ -482,9 +473,6 @@ class WecoAI:
         version: str | int, optional
             The version alias/number of the function to query. Default is -1 which results in the latest version being used.
 
-        version_number : int, optional
-            The version number of the function to query. Default is -1 which results in the latest version being used.
-
         text_input : str, optional
             The text input to the function.
 
@@ -493,6 +481,11 @@ class WecoAI:
 
         return_reasoning : bool, optional
             A flag to indicate if the reasoning should be returned. Default is False.
+        
+        strict : bool, optional
+            A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
+            For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.
+            Default is False.
 
         Returns
         -------
@@ -503,10 +496,10 @@ class WecoAI:
         return await self._query(
             fn_name=fn_name,
             version=version,
-            version_number=version_number,
             text_input=text_input,
             images_input=images_input,
             return_reasoning=return_reasoning,
+            strict=strict,
             is_async=True,
         )
 
@@ -514,10 +507,10 @@ class WecoAI:
         self,
         fn_name: str,
         version: Optional[Union[str, int]] = -1,
-        version_number: Optional[int] = -1,
         text_input: Optional[str] = "",
         images_input: Optional[List[str]] = [],
         return_reasoning: Optional[bool] = False,
+        strict: Optional[bool] = False,
     ) -> Dict[str, Any]:
         """Queries a specific function with the input (text, images or both).
 
@@ -529,9 +522,6 @@ class WecoAI:
         version : str | int, optional
             The version alias/number of the function to query. Default is -1 which results in the latest version being used.
 
-        version_number : int, optional
-            The version number of the function to query. Default is -1 which results in the latest version being used.
-
         text_input : str, optional
             The text input to the function.
 
@@ -540,6 +530,11 @@ class WecoAI:
 
         return_reasoning : bool, optional
             A flag to indicate if the reasoning should be returned. Default is False.
+        
+        strict : bool, optional
+            A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
+            For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.
+            Default is False.
 
         Returns
         -------
@@ -550,10 +545,10 @@ class WecoAI:
         return self._query(
             fn_name=fn_name,
             version=version,
-            version_number=version_number,
             text_input=text_input,
             images_input=images_input,
             return_reasoning=return_reasoning,
+            strict=strict,
             is_async=False,
         )
 
@@ -562,8 +557,8 @@ class WecoAI:
         fn_name: str,
         batch_inputs: List[Dict[str, Any]],
         version: Optional[Union[str, int]] = -1,
-        version_number: Optional[int] = -1,
         return_reasoning: Optional[bool] = False,
+        strict: Optional[bool] = False,
     ) -> List[Dict[str, Any]]:
         """Performs batch queries on a specified function version.
 
@@ -583,11 +578,13 @@ class WecoAI:
         version : Union[str, int], optional
             The version alias or number of the function to query. Defaults to -1 for the latest version.
 
-        version_number : int, optional
-            The specific version number of the function to query. Defaults to -1 for the latest version.
-
         return_reasoning : bool, optional
             If True, includes reasoning in the response. Defaults to False.
+        
+        strict : bool, optional
+            A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
+            For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.
+            Default is False.
 
         Returns
         -------
@@ -605,8 +602,8 @@ class WecoAI:
                     lambda fn_input: self.aquery(
                         fn_name=fn_name,
                         version=version,
-                        version_number=version_number,
                         return_reasoning=return_reasoning,
+                        strict=strict,
                         **fn_input,
                     ),
                     batch_inputs,

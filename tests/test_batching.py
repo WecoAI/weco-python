@@ -9,7 +9,6 @@ from weco import batch_query, build
 def ml_task_evaluator():
     fn_name, version_number, _ = build(
         task_description="I want to evaluate the feasibility of a machine learning task. Give me a json object with three keys - 'feasibility', 'justification', and 'suggestions'.",
-        multimodal=False,
     )
     return fn_name, version_number
 
@@ -28,7 +27,6 @@ def ml_task_inputs():
 def image_evaluator():
     fn_name, version_number, _ = build(
         task_description="Describe the contents of the given images. Provide a json object with 'description' and 'objects' keys.",
-        multimodal=True,
     )
     return fn_name, version_number
 
@@ -49,7 +47,7 @@ def test_batch_query_text(ml_task_evaluator, ml_task_inputs):
     fn_name, version_number = ml_task_evaluator
     batch_inputs = ml_task_inputs
 
-    query_responses = batch_query(fn_name=fn_name, version=-1, version_number=version_number, batch_inputs=batch_inputs)
+    query_responses = batch_query(fn_name=fn_name, version=version_number, batch_inputs=batch_inputs, strict=True)
 
     assert len(query_responses) == len(batch_inputs)
 
@@ -67,7 +65,7 @@ def test_batch_query_image(image_evaluator, image_inputs):
     fn_name, version_number = image_evaluator
     batch_inputs = image_inputs
 
-    query_responses = batch_query(fn_name=fn_name, version=-1, version_number=version_number, batch_inputs=batch_inputs)
+    query_responses = batch_query(fn_name=fn_name, version=version_number, batch_inputs=batch_inputs, strict=True)
 
     assert len(query_responses) == len(batch_inputs)
 

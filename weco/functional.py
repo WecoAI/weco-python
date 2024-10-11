@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Union
 from .client import WecoAI
 
 
-def build(task_description: str, multimodal: bool = False, api_key: Optional[str] = None) -> tuple[str, int, str]:
+def build(task_description: str, api_key: Optional[str] = None) -> tuple[str, int, str]:
     """Build a specialized function for a task.
 
     Parameters
@@ -11,9 +11,6 @@ def build(task_description: str, multimodal: bool = False, api_key: Optional[str
     task_description : str
         The description of the task for which the function is being built.
 
-    multimodal : bool, optional
-        A flag to indicate if the function should be multimodal. Default is False.
-
     api_key : str, optional
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - `WECO_API_KEY`.
 
@@ -23,11 +20,11 @@ def build(task_description: str, multimodal: bool = False, api_key: Optional[str
         A tuple containing the function name, version number and description.
     """
     client = WecoAI(api_key=api_key)
-    response = client.build(task_description=task_description, multimodal=multimodal)
+    response = client.build(task_description=task_description)
     return response
 
 
-async def abuild(task_description: str, multimodal: bool = False, api_key: Optional[str] = None) -> tuple[str, int, str]:
+async def abuild(task_description: str, api_key: Optional[str] = None) -> tuple[str, int, str]:
     """Build a specialized function for a task asynchronously.
 
     Parameters
@@ -35,9 +32,6 @@ async def abuild(task_description: str, multimodal: bool = False, api_key: Optio
     task_description : str
         The description of the task for which the function is being built.
 
-    multimodal : bool, optional
-        A flag to indicate if the function should be multimodal. Default is False.
-
     api_key : str, optional
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - `WECO_API_KEY`.
 
@@ -47,17 +41,17 @@ async def abuild(task_description: str, multimodal: bool = False, api_key: Optio
         A tuple containing the function name, version number and description.
     """
     client = WecoAI(api_key=api_key)
-    response = await client.abuild(task_description=task_description, multimodal=multimodal)
+    response = await client.abuild(task_description=task_description)
     return response
 
 
 def query(
     fn_name: str,
     version: Optional[Union[str, int]] = -1,
-    version_number: Optional[int] = -1,
     text_input: Optional[str] = "",
     images_input: Optional[List[str]] = [],
     return_reasoning: Optional[bool] = False,
+    strict: Optional[bool] = False,
     api_key: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Queries a specific function with the input (text, images or both).
@@ -70,9 +64,6 @@ def query(
     version : str | int, optional
         The version alias/number of the function to query. Default is -1 which results in the latest version being used.
 
-    version_number : int, optional
-        The version number of the function to query. Default is -1 which results in the latest version being used.
-
     text_input : str, optional
         The text input to the function.
 
@@ -81,6 +72,11 @@ def query(
 
     return_reasoning : bool, optional
         A flag to indicate if the reasoning should be returned. Default is False.
+
+    strict : bool, optional
+        A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
+        For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.
+        Default is False.
 
     api_key : str, optional
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - `WECO_API_KEY`.
@@ -96,10 +92,10 @@ def query(
     response = client.query(
         fn_name=fn_name,
         version=version,
-        version_number=version_number,
         text_input=text_input,
         images_input=images_input,
         return_reasoning=return_reasoning,
+        strict=strict,
     )
     return response
 
@@ -107,10 +103,10 @@ def query(
 async def aquery(
     fn_name: str,
     version: Optional[Union[str, int]] = -1,
-    version_number: Optional[int] = -1,
     text_input: Optional[str] = "",
     images_input: Optional[List[str]] = [],
     return_reasoning: Optional[bool] = False,
+    strict: Optional[bool] = False,
     api_key: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Queries a specific function with the input (text, images or both) asynchronously.
@@ -123,9 +119,6 @@ async def aquery(
     version: str | int, optional
         The version alias/number of the function to query. Default is -1 which results in the latest version being used.
 
-    version_number : int, optional
-        The version number of the function to query. Default is -1 which results in the latest version being used.
-
     text_input : str, optional
         The text input to the function.
 
@@ -134,6 +127,11 @@ async def aquery(
 
     return_reasoning : bool, optional
         A flag to indicate if the reasoning should be returned. Default is False.
+    
+    strict : bool, optional
+        A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
+        For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.
+        Default is False.
 
     api_key : str
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - `WECO_API_KEY`.
@@ -147,10 +145,10 @@ async def aquery(
     response = await client.aquery(
         fn_name=fn_name,
         version=version,
-        version_number=version_number,
         text_input=text_input,
         images_input=images_input,
         return_reasoning=return_reasoning,
+        strict=strict,
     )
     return response
 
@@ -159,8 +157,8 @@ def batch_query(
     fn_name: str,
     batch_inputs: List[Dict[str, Any]],
     version: Optional[Union[str, int]] = -1,
-    version_number: Optional[int] = -1,
     return_reasoning: Optional[bool] = False,
+    strict: Optional[bool] = False,
     api_key: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Batch queries a single function with multiple inputs.
@@ -182,11 +180,13 @@ def batch_query(
     version : str | int, optional
         The version alias/number of the function to query. Default is -1 which results in the latest version being used.
 
-    version_number : int, optional
-        The version number of the function to query. If not provided, the latest version is used. Default is -1 for the same behavior.
-
     return_reasoning : bool, optional
         A flag to indicate if the reasoning should be returned. Default is False.
+    
+    strict : bool, optional
+        A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
+        For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.
+        Default is False.
 
     api_key : str, optional
         The API key for the WecoAI service. If not provided, the API key must be set using the environment variable - `WECO_API_KEY`.
@@ -204,8 +204,8 @@ def batch_query(
     responses = client.batch_query(
         fn_name=fn_name,
         version=version,
-        version_number=version_number,
         batch_inputs=batch_inputs,
         return_reasoning=return_reasoning,
+        strict=strict,
     )
     return responses

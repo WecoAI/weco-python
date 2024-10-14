@@ -1,10 +1,8 @@
 # Introduction
 
-## Why use [`weco`](../index.md)?
+Lets jump right in!
 
-## Jump In
-
-### Export API Key
+## Export API Key
 
 When using the Weco API, you will need to set the API key. You can find/setup your API key [here](https://www.aifunction.com/account/api-keys). Here's what it looks like.
 
@@ -15,7 +13,7 @@ Once you have your API key, pass it directly to the client using the `api_key` a
 export WECO_API_KEY=<YOUR_WECO_API_KEY>
 ```
 
-### Build & Deploy
+## Build & Deploy
 
 We can create a function on the [web console](https://www.aifunction.com) for the following task:
 > "Analyze a business idea and provide a structured evaluation. Output a JSON with 'viability_score' (0-100), 'strengths' (list), 'weaknesses' (list), and 'next_steps' (list)."

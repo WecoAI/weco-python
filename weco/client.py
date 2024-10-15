@@ -10,7 +10,7 @@ import requests
 from httpx import HTTPStatusError
 from PIL import Image
 
-from .constants import MAX_IMAGE_SIZE_MB, MAX_IMAGE_UPLOADS, MAX_TEXT_LENGTH, SUPPORTED_IMAGE_EXTENSIONS
+from .constants import MAX_IMAGE_SIZE_MB, MAX_IMAGE_UPLOADS, MAX_TEXT_LENGTH, SUPPORTED_IMAGE_EXTENSIONS, __version__ as package_version
 from .utils import (
     get_image_size,
     is_base64_image,
@@ -65,6 +65,7 @@ class WecoAI:
     def _headers(self) -> Dict[str, str]:
         """Constructs the headers for the API requests."""
         return {
+            "Source": f"py-{package_version}",
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }

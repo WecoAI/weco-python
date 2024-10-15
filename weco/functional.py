@@ -127,7 +127,7 @@ async def aquery(
 
     return_reasoning : bool, optional
         A flag to indicate if the reasoning should be returned. Default is False.
-    
+
     strict : bool, optional
         A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
         For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.
@@ -182,7 +182,7 @@ def batch_query(
 
     return_reasoning : bool, optional
         A flag to indicate if the reasoning should be returned. Default is False.
-    
+
     strict : bool, optional
         A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
         For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.

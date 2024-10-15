@@ -10,14 +10,9 @@ import requests
 from httpx import HTTPStatusError
 from PIL import Image
 
-from .constants import MAX_IMAGE_SIZE_MB, MAX_IMAGE_UPLOADS, MAX_TEXT_LENGTH, SUPPORTED_IMAGE_EXTENSIONS, __version__ as package_version
-from .utils import (
-    get_image_size,
-    is_base64_image,
-    is_local_image,
-    is_public_url_image,
-    preprocess_image,
-)
+from .constants import MAX_IMAGE_SIZE_MB, MAX_IMAGE_UPLOADS, MAX_TEXT_LENGTH, SUPPORTED_IMAGE_EXTENSIONS
+from .constants import __version__ as package_version
+from .utils import get_image_size, is_base64_image, is_local_image, is_public_url_image, preprocess_image
 
 
 class WecoAI:
@@ -28,7 +23,9 @@ class WecoAI:
     we recommend that users build functions on the WecoAI platform to leverage the full power of the API, then deploy it in production using this client.
     """
 
-    def __init__(self, api_key: Union[str, None] = None, timeout: Optional[float] = 120.0, http2: Optional[bool] = True) -> None:
+    def __init__(
+        self, api_key: Union[str, None] = None, timeout: Optional[float] = 120.0, http2: Optional[bool] = True
+    ) -> None:
         """Initializes the WecoAI client.
 
         Parameters
@@ -406,7 +403,7 @@ class WecoAI:
 
         return_reasoning : bool
             Whether to return reasoning for the output.
-        
+
         strict : bool
             Whether to perform strict validation of the input.
 
@@ -482,7 +479,7 @@ class WecoAI:
 
         return_reasoning : bool, optional
             A flag to indicate if the reasoning should be returned. Default is False.
-        
+
         strict : bool, optional
             A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
             For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.
@@ -531,7 +528,7 @@ class WecoAI:
 
         return_reasoning : bool, optional
             A flag to indicate if the reasoning should be returned. Default is False.
-        
+
         strict : bool, optional
             A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
             For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.
@@ -581,7 +578,7 @@ class WecoAI:
 
         return_reasoning : bool, optional
             If True, includes reasoning in the response. Defaults to False.
-        
+
         strict : bool, optional
             A flag to indicate if the function should be queried in strict mode where the inputs provided should match the input modalities of the LLM chosen for this function.
             For example, when strict is True, a text-image query to a function that uses a text-only LLM will raise an error. When strict is False, the function will attempt to handle the input by dropping the image components.

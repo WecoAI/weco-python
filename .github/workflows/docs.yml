@@ -29,7 +29,7 @@ jobs:
           pip install -e ".[docs]"
 
       - name: Add remote
-        run: git remote add origin "https://github.com/WecoAI/weco-python.git"
+        run: git remote add pkg "https://github.com/WecoAI/weco-python.git"
 
       - name: Build and deploy
         run: |

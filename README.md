@@ -6,14 +6,61 @@
 ![Python](https://img.shields.io/badge/Python-3.10.14-blue)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
+
+<a href="https://colab.research.google.com/github/WecoAI/weco-python/blob/main/examples/cookbook.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" width=110 height=20/></a>
+<a target="_blank" href="https://lightning.ai/new?repo_url=https%3A%2F%2Fgithub.com%2FWecoAI%2Fweco-python%2Fblob%2Fmain%2Fexamples%2Fcookbook.ipynb"><img src="https://pl-bolts-doc-images.s3.us-east-2.amazonaws.com/app-2/studio-badge.svg" alt="Open in Studio" width=100 height=20/></a>
+
 # $f$(👷‍♂️)
 
 ## IMPORTANT
 
 This package has been deprecated. Please move to our new package - [aifn](https://github.com/WecoAI/aifn-python)!
 
-<a href="https://colab.research.google.com/github/WecoAI/weco-python/blob/main/examples/cookbook.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" width=110 height=20/></a>
-<a target="_blank" href="https://lightning.ai/new?repo_url=https%3A%2F%2Fgithub.com%2FWecoAI%2Fweco-python%2Fblob%2Fmain%2Fexamples%2Fcookbook.ipynb"><img src="https://pl-bolts-doc-images.s3.us-east-2.amazonaws.com/app-2/studio-badge.svg" alt="Open in Studio" width=100 height=20/></a>
+### From `weco` to `aifn`
+
+When migrating, here's what you need to know:
+
+#### Package
+- **`weco`**: Install using  
+  ```bash
+  pip install weco
+  ```
+- **`aifn`**: Install using  
+  ```bash
+  pip install aifn
+  ```
+
+---
+
+#### Building AI Functions
+- **`weco`**: Use the `build` method to create a function:  
+  ```python
+  from weco import build
+  function_name: str, function_version: int, function_description: str = build("identify objects in an image")
+  ```
+- **`aifn`**: Use the `build` method to create a function with type `AIFunction`:  
+  ```python
+  from aifn import build
+  object_identifier: AIFunction = build("identify objects in an image")
+  ```
+
+---
+
+#### Calling AI Functions
+- **`weco`**: Query an AI function using the `query` method:  
+  ```python
+  from weco import query
+  response = query(
+      fn_name="BusinessIdeaAnalyzer-XYZ123",
+      text_input="A subscription service for personalized, AI-generated bedtime stories for children."
+  )
+  output = response["output"]
+  ```
+- **`aifn`**: Query an AI function by creating an `AIFunction` object:  
+  ```python
+  from aifn import AIFunction
+  idea_analyzer = AIFunction("BusinessIdeaAnalyzer-XYZ123")
+  output = idea_analyzer("A subscription service for personalized, AI-generated bedtime stories for children.").output
 
 A client facing API for interacting with the [Weco AI](https://www.weco.ai/) function builder [service](https://www.aifunction.com)!
 

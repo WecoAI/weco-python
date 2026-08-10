@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> **This repository is archived and no longer maintained (August 2026).**
+> The current Weco product is the [`weco` CLI](https://github.com/WecoAI/weco-cli) (`pip install weco`) and the [Weco dashboard](https://dashboard.weco.ai) — evaluation-driven code optimization.
+> Note: the `weco` package on PyPI now serves the current CLI, not this library. The `aifn` migration described below is historical; `aifn` is also deprecated.
+
 <div align="center" style="display: flex; align-items: center; justify-content: center;">
   <img src=".overrides/.icons/custom/weco.svg" alt="Weco AI" style="height: 50px; margin-right: 10px;">
   <a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=Georgia&size=32&duration=4000&pause=400&color=FD4578&vCenter=true&multiline=false&width=200&height=50&lines=Weco+Client" alt="Typing SVG" /></a>
